@@ -1,0 +1,19 @@
+.card {
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease;
+}
+
+.default {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+}
+
+.elevated {
+  background: var(--card-bg);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.outlined {
+  background: var(--card-bg);
+  border: 2px solid var(--accent-color);
+}

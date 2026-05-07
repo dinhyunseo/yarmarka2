@@ -1,0 +1,164 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--bg-color);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.closeBtn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--card-bg);
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  color: var(--text-color);
+  transition: transform 0.2s ease;
+}
+
+.closeBtn:hover {
+  transform: rotate(90deg);
+}
+
+.content {
+  display: flex;
+  height: 100%;
+}
+
+.imageSection {
+  flex: 1.2;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.imageSection img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.infoSection {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  color: var(--text-color);
+}
+
+.author {
+  color: var(--accent-color);
+  font-weight: 500;
+  margin-bottom: 30px;
+}
+
+.description {
+  flex: 1;
+  margin-bottom: 30px;
+}
+
+.description h3 {
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.description p {
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.price {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.addBtn {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+  .content {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .imageSection {
+    min-height: 300px;
+  }
+  
+  .infoSection {
+    padding: 25px;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .footer {
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+  }
+  
+  .price {
+    text-align: center;
+  }
+}

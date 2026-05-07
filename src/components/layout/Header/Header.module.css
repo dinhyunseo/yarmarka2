@@ -1,0 +1,198 @@
+.header {
+  background: var(--header-bg);
+  box-shadow: 0 4px 20px var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 1100;
+  width: 100%;
+  backdrop-filter: blur(8px);
+}
+
+.container {
+  width: 100%;
+  padding: 0 40px;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 0;
+  position: relative;
+}
+
+.logoLink {
+  text-decoration: none;
+  color: inherit;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--accent-color);
+  margin: 0;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.menuToggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-color);
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.cartIcon {
+  font-size: 18px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s;
+}
+
+.cartIcon:hover {
+  opacity: 0.8;
+}
+
+.userActions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.profileLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-color);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.profileLink:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.linkButton {
+  padding: 8px 15px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  cursor: pointer;
+  border-radius: 4px;
+  color: var(--text-color);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.linkButton:hover {
+  background: var(--hover-bg);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.mainNav ul {
+  display: flex;
+  list-style: none;
+  gap: 30px;
+}
+
+.mainNav a {
+  text-decoration: none;
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.mainNav a:hover {
+  color: var(--accent-color);
+}
+
+.searchBar {
+  display: flex;
+  margin: 20px 0;
+}
+
+.searchBar input {
+  flex: 1;
+  padding: 12px 15px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  border-radius: 4px 0 0 4px;
+  font-size: 16px;
+  color: var(--text-color);
+}
+
+.searchBar button {
+  padding: 12px 20px;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .headerTop {
+    padding: 15px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .menuToggle {
+    display: block;
+    position: relative;
+    z-index: 1002;
+  }
+
+  .logoLink {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+  }
+
+  .logo {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .headerActions {
+    position: relative;
+    right: 0;
+    gap: 10px;
+    order: 3;
+  }
+
+  .mainNav {
+    display: none;
+  }
+
+  .userActions {
+    display: none; /* Hide login/reg buttons on mobile top bar - show them in side menu instead if needed? */
+  }
+}

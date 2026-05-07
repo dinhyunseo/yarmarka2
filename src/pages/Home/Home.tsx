@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { addToCart } from '../../store/cartSlice';
 import { RootState } from '../../store';
@@ -26,8 +27,12 @@ export const Home: React.FC = () => {
     return filterProducts(PRODUCTS, searchTerm, selectedCategory);
   }, [searchTerm, selectedCategory]);
 
+  const navigate = useNavigate();
+
   const handleAddToCart = (product: Product) => {
     dispatch(addToCart(product));
+    setSelectedProduct(null); // Close modal after adding to cart
+    navigate('/'); // Ensure navigation to home page
   };
 
   const handleCategorySelect = (categoryId: string) => {

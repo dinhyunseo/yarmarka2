@@ -90,12 +90,6 @@ const Profile: React.FC = () => {
               <ShoppingBag size={20} />
               <span>В магазин</span>
             </Link>
-            <button 
-              className={styles.switchBtn}
-              onClick={() => dispatch(toggleRole())}
-            >
-              Сменить роль (Демо)
-            </button>
           </div>
         </div>
 

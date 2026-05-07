@@ -65,7 +65,6 @@ export const Header: React.FC<HeaderProps> = ({
             <li><a href="#new">Новинки</a></li>
             <li><a href="#popular">Популярное</a></li>
             <li><Link to="/masters">Мастера</Link></li>
-            <li><a href="#gifts">Подарочные сертификаты</a></li>
           </ul>
         </nav>
 

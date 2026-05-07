@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Shield, Users, ShoppingCart, AlertCircle, Trash2, Eye, EyeOff, X, User } from 'lucide-react';
+import { Shield, Users, ShoppingCart, AlertCircle, Trash2, Eye, EyeOff, X, User as UserIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { RootState } from '../../../store';
 import styles from './ProfileComponents.module.css';
 
@@ -49,6 +50,14 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       <section className={styles.section}>
+        <div style={{ maxWidth: '450px' }}>
+          <h2>Управление мастерами</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '15px' }}>Список всех мастеров, проверка квалификации и модерация товаров</p>
+          <Link to="/masters" className={styles.profileBtn} style={{ display: 'inline-flex' }}>Перейти в Мастера</Link>
+        </div>
+      </section>
+
+      <section className={styles.section}>
         <h2>Управление контентом (Все товары)</h2>
         <div className={styles.productsList}>
           {products.map((product) => (
@@ -88,7 +97,7 @@ export const AdminDashboard: React.FC = () => {
                 <span className={styles.previewBadge}>Режим предпросмотра</span>
                 <h2 className={styles.modalTitle}>{selectedProduct.title}</h2>
                 <div className={styles.modalAuthor}>
-                   <User size={18} />
+                   <UserIcon size={18} />
                    <span>{selectedProduct.author}</span>
                 </div>
                 <div className={styles.modalPrice}>{selectedProduct.price} ₽</div>

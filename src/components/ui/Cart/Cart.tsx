@@ -1,5 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../../store';
 import { removeFromCart, updateQuantity, clearCart } from '../../../store/cartSlice';
 import { formatPrice } from '../../../utils/helpers';
@@ -11,7 +12,13 @@ interface CartProps {
 
 export const Cart: React.FC<CartProps> = ({ onClose }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { items, total } = useSelector((state: RootState) => state.cart);
+
+  const handleCheckout = () => {
+    onClose();
+    navigate('/checkout');
+  };
 
   if (items.length === 0) {
     return (
@@ -85,7 +92,7 @@ export const Cart: React.FC<CartProps> = ({ onClose }) => {
             <button className={styles.clearButton} onClick={() => dispatch(clearCart())}>
               Очистить
             </button>
-            <button className={styles.checkoutButton}>
+            <button className={styles.checkoutButton} onClick={handleCheckout}>
               Оформить заказ
             </button>
           </div>

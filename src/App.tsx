@@ -7,6 +7,7 @@ import { Login } from './pages/Login/Login';
 import { Register } from './pages/Register/Register';
 import Profile from './pages/Profile/Profile';
 import { Masters } from './pages/Masters/Masters';
+import { Checkout } from './pages/Checkout/Checkout';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/masters" element={<Masters />} />
+          <Route path="/checkout" element={<Checkout />} />
         </Routes>
       </Router>
     </Provider>

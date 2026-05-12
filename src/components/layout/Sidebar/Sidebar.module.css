@@ -84,12 +84,23 @@
   margin-bottom: 20px;
 }
 
-.mobileNav li a {
+.mobileNav li a, .navButton {
   display: block;
+  width: 100%;
   padding: 12px 0;
   text-decoration: none;
   color: var(--text-color);
+  border: none;
   border-bottom: 1px solid var(--border-color);
+  background: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.mobileNav li a:hover, .navButton:hover {
+  background: var(--hover-bg);
 }
 
 .divider {

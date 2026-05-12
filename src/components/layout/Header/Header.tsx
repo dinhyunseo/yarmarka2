@@ -62,8 +62,8 @@ export const Header: React.FC<HeaderProps> = ({
 
         <nav className={`${styles.mainNav} ${isMenuOpen ? styles.open : ''}`}>
           <ul>
-            <li><a href="#new">Новинки</a></li>
-            <li><a href="#popular">Популярное</a></li>
+            <li><Link to="/?tab=new">Новинки</Link></li>
+            <li><Link to="/?tab=popular">Популярное</Link></li>
             <li><Link to="/masters">Мастера</Link></li>
           </ul>
         </nav>

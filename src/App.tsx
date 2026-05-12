@@ -7,6 +7,7 @@ import { Login } from './pages/Login/Login';
 import { Register } from './pages/Register/Register';
 import Profile from './pages/Profile/Profile';
 import { Masters } from './pages/Masters/Masters';
+import { MasterProfile } from './pages/Masters/MasterProfile';
 import { Checkout } from './pages/Checkout/Checkout';
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/masters" element={<Masters />} />
+          <Route path="/masters/:masterId" element={<MasterProfile />} />
           <Route path="/checkout" element={<Checkout />} />
         </Routes>
       </Router>

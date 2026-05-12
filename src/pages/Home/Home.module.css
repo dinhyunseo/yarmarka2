@@ -17,12 +17,61 @@
   flex: 1;
 }
 
-.pageTitle {
-  text-align: center;
+.contentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 40px;
+  gap: 20px;
+}
+
+.pageTitle {
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
   color: var(--text-color);
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--card-bg);
+  padding: 5px;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.tab {
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tabIcon {
+  font-size: 1.1rem;
+}
+
+.tab:hover {
+  color: var(--text-color);
+  background: var(--bg-color);
+}
+
+.tab.activeTab {
+  background: var(--text-color);
+  color: var(--card-bg);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .productsGrid {

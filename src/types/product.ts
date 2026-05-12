@@ -6,6 +6,8 @@ export interface Product {
   category: string;
   author: string;
   description: string;
+  isNew?: boolean;
+  isPopular?: boolean;
 }
 
 export interface CartItem extends Product {

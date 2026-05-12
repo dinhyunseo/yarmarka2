@@ -7,6 +7,7 @@ interface SidebarProps {
   categories?: Category[];
   selectedCategory?: string;
   onCategorySelect?: (categoryId: string) => void;
+  onTabSelect?: (tab: 'all' | 'new' | 'popular') => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
@@ -15,6 +16,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   categories = [], 
   selectedCategory = 'all', 
   onCategorySelect,
+  onTabSelect,
   isOpen = false,
   onClose
 }) => {
@@ -34,9 +36,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
           <nav className={styles.mobileNav}>
             <ul>
-              <li><a href="#new" onClick={onClose}>Новинки</a></li>
-              <li><a href="#popular" onClick={onClose}>Популярное</a></li>
-              <li><Link to="/masters" onClick={onClose}>Мастера</Link></li>
+              <li>
+                <Link 
+                  to="/?tab=new"
+                  className={styles.navButton} 
+                  onClick={onClose}
+                >
+                  Новинки
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/?tab=popular"
+                  className={styles.navButton} 
+                  onClick={onClose}
+                >
+                  Популярное
+                </Link>
+              </li>
+              <li><Link to="/masters" className={styles.navButton} onClick={onClose}>Мастера</Link></li>
             </ul>
           </nav>
           {categories.length > 0 && (

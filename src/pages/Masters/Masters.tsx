@@ -1,6 +1,6 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Header } from '../../components/layout/Header/Header';
-import { Sidebar } from '../../components/layout/Sidebar/Sidebar';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { User, Shield, Star, Package } from 'lucide-react';
@@ -9,49 +9,37 @@ import styles from './Masters.module.css';
 const masters = [
   {
     id: 'm1',
-    name: 'Анна Мария',
-    specialty: 'Керамика и гончарное дело',
+    name: 'Александр Громов',
+    specialty: 'Кожевник и мастер аксессуаров из натуральной кожи',
     rating: 4.9,
-    reviews: 128,
-    productsCount: 15,
-    avatar: '/api/placeholder/150/150'
+    reviews: 156,
+    productsCount: 24,
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop'
   },
   {
     id: 'm2',
-    name: 'Мастер Сергей',
-    specialty: 'Деревянные изделия и игрушки',
-    rating: 4.8,
-    reviews: 86,
-    productsCount: 12,
-    avatar: '/api/placeholder/150/150'
+    name: 'Елена Светлова',
+    specialty: 'Художественная керамика и авторский декор для дома',
+    rating: 5.0,
+    reviews: 89,
+    productsCount: 18,
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop'
   },
   {
     id: 'm3',
-    name: 'Кузнец Иван',
-    specialty: 'Художественная ковка',
-    rating: 5.0,
-    reviews: 45,
-    productsCount: 8,
-    avatar: '/api/placeholder/150/150'
-  },
-  {
-    id: 'm4',
-    name: 'Кузнец Максим',
-    specialty: 'Оружейное мастерство и аксессуары',
-    rating: 4.7,
-    reviews: 32,
-    productsCount: 6,
-    avatar: '/api/placeholder/150/150'
+    name: 'Дмитрий Ковалев',
+    specialty: 'Ювелирное искусство и работа с редкими металлами',
+    rating: 4.8,
+    reviews: 64,
+    productsCount: 12,
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop'
   }
 ];
 
 export const Masters: React.FC = () => {
-  const [isSidebarOpen, setSidebarOpen] = React.useState(false);
-
   return (
     <div className={styles.container}>
-      <Header isMenuOpen={isSidebarOpen} onMenuToggle={() => setSidebarOpen(true)} />
-      <Sidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Header isMenuOpen={false} onMenuToggle={() => {}} />
       
       <main className={styles.main}>
         <div className={styles.hero}>
@@ -89,7 +77,9 @@ export const Masters: React.FC = () => {
                   </div>
                 </div>
 
-                <button className={styles.profileBtn}>Смотреть профиль</button>
+                <Link to={`/masters/${master.id}`} className={styles.profileBtn}>
+                  Смотреть профиль
+                </Link>
               </div>
             </div>
           ))}

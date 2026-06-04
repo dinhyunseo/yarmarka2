@@ -13,9 +13,9 @@ const loadProductsFromStorage = (): Product[] => {
   const dbVersion = localStorage.getItem('products_db_version');
   
   // If the stored version is missing or outdated, reset list to default PRODUCTS to pick up new changes
-  if (dbVersion !== 'v3') {
+  if (dbVersion !== 'v4') {
     localStorage.setItem('master_products', JSON.stringify(PRODUCTS));
-    localStorage.setItem('products_db_version', 'v3');
+    localStorage.setItem('products_db_version', 'v4');
     return PRODUCTS;
   }
 
@@ -23,7 +23,7 @@ const loadProductsFromStorage = (): Product[] => {
     try {
       const parsed = JSON.parse(stored) as Product[];
       // Reset local storage products if any of them contain obsolete custom categories
-      const validCategories = ['jewelry', 'clothing', 'home', 'toys', 'art', 'ceramics', 'leather', 'blacksmith'];
+      const validCategories = ['jewelry', 'clothing', 'home', 'toys', 'ceramics', 'leather', 'blacksmith'];
       const hasObsoleteCategory = parsed.some(p => !validCategories.includes(p.category));
       if (hasObsoleteCategory) {
         localStorage.setItem('master_products', JSON.stringify(PRODUCTS));

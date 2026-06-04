@@ -6,7 +6,6 @@ export const CATEGORIES: Category[] = [
   { id: 'clothing', name: 'Одежда и обувь', icon: '👕' },
   { id: 'home', name: 'Дом и интерьер', icon: '🏠' },
   { id: 'toys', name: 'Игрушки и игры', icon: '🧸' },
-  { id: 'art', name: 'Искусство', icon: '🎨' },
   { id: 'ceramics', name: 'Керамика', icon: '🏺' },
   { id: 'leather', name: 'Кожа и аксессуары', icon: '💼' },
   { id: 'blacksmith', name: 'Кузнечные дела', icon: '🔨' }

@@ -13,7 +13,6 @@ const CATEGORY_DEFAULT_IMAGES: Record<string, string> = {
   clothing: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&h=500&fit=crop',
   home: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&h=500&fit=crop',
   toys: 'https://images.unsplash.com/photo-1559251606-c623743a6d76?w=500&h=500&fit=crop',
-  art: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=500&h=500&fit=crop',
   ceramics: 'https://images.unsplash.com/photo-1612196808214-b9e1d614e380?w=500&h=500&fit=crop',
   leather: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=500&h=500&fit=crop',
   blacksmith: 'https://images.unsplash.com/photo-1544078751-58fed2b84d57?w=500&h=500&fit=crop'
@@ -24,7 +23,6 @@ const CATEGORY_DETAILS: Record<string, { icon: string; name: string; desc: strin
   clothing: { icon: '👕', name: 'Одежда', desc: 'Платья, обувь, аксессуары', color: 'text-blue-600 border-blue-200', bg: 'bg-blue-50' },
   home: { icon: '🏠', name: 'Дом', desc: 'Утварь, текстиль, уют', color: 'text-amber-600 border-amber-200', bg: 'bg-amber-50' },
   toys: { icon: '🧸', name: 'Игрушки', desc: 'Для детей и коллекционеров', color: 'text-rose-600 border-rose-200', bg: 'bg-rose-50' },
-  art: { icon: '🎨', name: 'Искусство', desc: 'Живопись, скульптура, панно', color: 'text-emerald-600 border-emerald-200', bg: 'bg-emerald-50' },
   ceramics: { icon: '🏺', name: 'Керамика', desc: 'Глина, посуда, вазы', color: 'text-orange-600 border-orange-200', bg: 'bg-orange-50' },
   leather: { icon: '💼', name: 'Кожа', desc: 'Ремни, сумки, кошельки', color: 'text-stone-700 border-stone-200', bg: 'bg-stone-50' },
   blacksmith: { icon: '🔨', name: 'Кузница', desc: 'Кованые изделия, декор', color: 'text-zinc-700 border-zinc-200', bg: 'bg-zinc-50' }
@@ -35,7 +33,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   clothing: '👕 Одежда и обувь',
   home: '🏠 Дом и интерьер',
   toys: '🧸 Игрушки и игры',
-  art: '🎨 Искусство',
   ceramics: '🏺 Керамика',
   leather: '💼 Кожа и аксессуары',
   blacksmith: '🔨 Кузнечные дела'

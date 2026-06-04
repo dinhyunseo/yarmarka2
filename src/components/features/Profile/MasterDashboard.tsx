@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Package, DollarSign, Users, TrendingUp, Plus, Edit2, Trash2, X, Check, Image, Sparkles, AlertCircle, Tag, FileText, Link as LinkIcon, Award, Eye, Sparkle } from 'lucide-react';
+import { Package, DollarSign, Users, TrendingUp, Plus, Edit2, Trash2, X, Check, Image, Sparkles, AlertCircle, Tag, FileText, Link as LinkIcon, Award, Eye, Sparkle, Upload } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
 import { addProduct, updateProduct, removeProduct } from '../../../store/productsSlice';
@@ -69,6 +69,7 @@ export const MasterDashboard: React.FC = () => {
   const [category, setCategory] = useState('jewelry');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
+  const [imageSource, setImageSource] = useState<'link' | 'file'>('link');
   const [isNew, setIsNew] = useState(false);
   const [isPopular, setIsPopular] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState('');
@@ -368,7 +369,7 @@ export const MasterDashboard: React.FC = () => {
               </div>
 
               {/* Scrollable multi-column workspace */}
-              <div className="flex-1 overflow-y-auto lg:grid lg:grid-cols-12 bg-[var(--card-bg)] text-[var(--text-color)]">
+              <div className="flex-1 overflow-y-auto lg:grid lg:grid-cols-12 bg-[var(--card-bg)] text-[var(--text-color)] font-sans">
                 
                 {/* LEFT COLUMN: Highly tailored visual Inputs Form (col-span-7) */}
                 <form onSubmit={handleSaveProduct} className="p-8 space-y-6 lg:col-span-7 border-r border-[var(--border-color)]">
@@ -393,7 +394,7 @@ export const MasterDashboard: React.FC = () => {
                   {/* Price Input */}
                   <div className="space-y-2">
                     <label className="text-[11px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1.5">
-                      <DollarSign size={13} className="text-emerald-500" /> Цена изделия (₽) <span className="text-red-500">*</span>
+                      Цена изделия (₽) <span className="text-red-500">*</span>
                     </label>
                     <div className="relative group">
                       <input 
@@ -409,21 +410,19 @@ export const MasterDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Decorative / Visual Visual Category Cards Selection instead of ugly select dropdown */}
+                  {/* Category select as an elegant vertical check list */}
                   <div className="space-y-2.5">
                     <label className="text-[11px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1.5">
                       <Award size={13} className="text-amber-500" /> Выберите категорию <span className="text-red-500">*</span>
                     </label>
                     
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="space-y-1 max-h-[220px] overflow-y-auto border border-[var(--border-color)] rounded-2xl p-2 bg-[var(--input-bg)]">
                       {Object.entries(CATEGORY_DETAILS).map(([catId, catInfo]) => {
                         const isSelected = category === catId;
                         return (
-                          <motion.button
+                          <button
                             type="button"
                             key={catId}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
                             onClick={() => {
                               setCategory(catId);
                               // Auto update placeholder image matching chosen category material texture
@@ -432,20 +431,21 @@ export const MasterDashboard: React.FC = () => {
                                 setImage(correspondImg);
                               }
                             }}
-                            className={`p-3 rounded-2xl border text-left flex flex-col justify-between h-20 transition-all cursor-pointer ${
+                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all ${
                               isSelected 
-                                ? 'border-[var(--accent-color)] bg-[var(--accent-color)]/10 ring-2 ring-[var(--accent-color)]/10' 
-                                : 'border-[var(--border-color)] bg-[var(--card-bg)] hover:border-[var(--text-color)]/30'
+                                ? 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 font-semibold' 
+                                : 'border border-transparent text-[var(--text-color)]/80 hover:bg-[var(--hover-bg)]'
                             }`}
                           >
-                            <span className="text-2xl">{catInfo.icon}</span>
-                            <div>
-                              <span className={`block text-xs font-bold leading-none ${isSelected ? 'text-[var(--accent-color)]' : 'text-[var(--text-color)]'}`}>
-                                {catInfo.name}
-                              </span>
-                              <span className="text-[9px] opacity-60 text-[var(--text-color)] line-clamp-1 mt-0.5 leading-tight">{catInfo.desc}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl shrink-0 select-none">{catInfo.icon}</span>
+                              <div className="leading-tight">
+                                <span className="text-xs font-bold block">{catInfo.name}</span>
+                                <span className="text-[10px] opacity-60 font-medium block mt-0.5">{catInfo.desc}</span>
+                              </div>
                             </div>
-                          </motion.button>
+                            {isSelected && <Check size={16} className="text-indigo-500 shrink-0" />}
+                          </button>
                         );
                       })}
                     </div>
@@ -470,7 +470,7 @@ export const MasterDashboard: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="text-[11px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1.5">
-                        <LinkIcon size={13} className="text-rose-500" /> Изображение изделия (URL)
+                        <Image size={13} className="text-rose-500" /> Изображение изделия
                       </label>
                       <button
                         type="button"
@@ -482,13 +482,68 @@ export const MasterDashboard: React.FC = () => {
                       </button>
                     </div>
 
-                    <input 
-                      type="url"
-                      placeholder="Вставьте ссылку на ваше фото с внешнего ресурса (Unsplash, Pinterest, etc.)"
-                      value={image}
-                      onChange={(e) => setImage(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm transition-all font-medium"
-                    />
+                    {/* Toggle between Link and File */}
+                    <div className="flex bg-[var(--bg-color)]/70 p-1 rounded-xl border border-[var(--border-color)] w-max">
+                      <button
+                        type="button"
+                        onClick={() => setImageSource('link')}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider select-none transition-all ${
+                          imageSource === 'link'
+                            ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                            : 'text-[var(--text-color)]/55 hover:text-[var(--text-color)]'
+                        }`}
+                      >
+                        Ссылка
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageSource('file')}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider select-none transition-all ${
+                          imageSource === 'file'
+                            ? 'bg-indigo-600 text-white shadow-sm font-bold'
+                            : 'text-[var(--text-color)]/55 hover:text-[var(--text-color)]'
+                        }`}
+                      >
+                        Файл
+                      </button>
+                    </div>
+
+                    {imageSource === 'link' ? (
+                      <input 
+                        type="url"
+                        placeholder="Вставьте ссылку на ваше фото с внешнего ресурса (Unsplash, Pinterest, etc.)"
+                        value={image.startsWith('data:image') ? '' : image}
+                        onChange={(e) => setImage(e.target.value)}
+                        className="w-full px-4 py-3 rounded-2xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm transition-all font-medium"
+                      />
+                    ) : (
+                      <div className="border border-dashed border-[var(--border-color)] rounded-2xl p-6 bg-[var(--input-bg)] text-center relative group hover:border-indigo-500/50 transition-colors">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                if (typeof reader.result === 'string') {
+                                  setImage(reader.result);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Upload size={24} className="text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                          <div className="text-xs font-semibold text-[var(--text-color)]">
+                            {image.startsWith('data:image') ? '✓ Изображение загружено. Кликните для замены' : 'Нажмите для выбора файла'}
+                          </div>
+                          <span className="text-[10px] text-[var(--text-color)]/50">PNG, JPG, WebP, SVG</span>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Quick high quality helper material shortcuts to quickly make the image beautiful */}
                     <div>
@@ -498,13 +553,16 @@ export const MasterDashboard: React.FC = () => {
                           { name: '🏺 Глина/Глазурь', url: 'https://images.unsplash.com/photo-1612196808214-b9e1d614e380?w=500&h=500&fit=crop' },
                           { name: '👜 Нат. Кожа', url: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=500&h=500&fit=crop' },
                           { name: '🌲 Ценный Вяз', url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&h=500&fit=crop' },
-                          { name: '💍 Серебро/Опал', url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=500&h=500&fit=crop' },
+                          { name: '💍 Ковка', url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=500&h=500&fit=crop' },
                           { name: '🧶 Лён/Ткань', url: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&h=500&fit=crop' }
                         ].map((preset, idx) => (
                           <button
                             type="button"
                             key={idx}
-                            onClick={() => setImage(preset.url)}
+                            onClick={() => {
+                              setImage(preset.url);
+                              setImageSource('link');
+                            }}
                             className="text-xs bg-[var(--bg-color)] border border-[var(--border-color)] rounded-xl px-2.5 py-1.5 text-[var(--text-color)]/70 hover:bg-[var(--hover-bg)] transition-colors font-medium cursor-pointer"
                           >
                             {preset.name}
@@ -561,13 +619,13 @@ export const MasterDashboard: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="px-6 py-3 rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] font-bold text-sm text-[var(--text-color)]/80 transition cursor-pointer"
+                      className="px-5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] font-semibold text-xs text-[var(--text-color)]/70 hover:text-[var(--text-color)] transition duration-200 cursor-pointer"
                     >
                       Отмена
                     </button>
                     <button
                       type="submit"
-                      className="px-8 py-3 rounded-2xl bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] font-bold text-sm text-white transition shadow-lg shadow-[var(--accent-color)]/10 cursor-pointer"
+                      className="px-6 py-2.5 rounded-xl bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] font-bold text-xs text-white transition duration-200 cursor-pointer active:scale-95"
                     >
                       {editingProduct ? 'Сохранить изменения' : 'Опубликовать на ярмарке'}
                     </button>
@@ -586,10 +644,10 @@ export const MasterDashboard: React.FC = () => {
                     <p className="text-xs text-[var(--text-color)]/50">Так ваше предложение будет выглядеть в поисковой ленте покупателей с учетом его параметров.</p>
                   </div>
 
-                  {/* Gorgeous simulated 3D-hover Product Card Mockup */}
+                  {/* Gorgeous simulated Product Card Mockup */}
                   <motion.div 
-                    whileHover={{ y: -6, rotateY: 1 }}
-                    className="bg-[var(--card-bg)] rounded-[24px] overflow-hidden shadow-xl border border-[var(--border-color)] flex flex-col transition-all relative w-full max-w-sm mx-auto self-center"
+                    whileHover={{ y: -4 }}
+                    className="bg-[var(--card-bg)] rounded-[24px] overflow-hidden shadow-xl border border-[var(--border-color)] flex flex-col transition-all relative w-full max-w-sm mx-auto self-center select-none"
                   >
                     {/* Visual Badges floating */}
                     {(isNew || isPopular) && (
@@ -607,12 +665,12 @@ export const MasterDashboard: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Image space */}
-                    <div className="relative aspect-square w-full bg-[var(--hover-bg)] overflow-hidden">
+                    {/* Image space with micro-interactivity zoom */}
+                    <div className="relative aspect-square w-full bg-[var(--hover-bg)] overflow-hidden group">
                       <img
                         src={image || CATEGORY_DEFAULT_IMAGES[category as keyof typeof CATEGORY_DEFAULT_IMAGES]}
                         alt="Предварительный просмотр"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = CATEGORY_DEFAULT_IMAGES[category as keyof typeof CATEGORY_DEFAULT_IMAGES] || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&h=500&fit=crop';
                         }}
@@ -668,10 +726,10 @@ export const MasterDashboard: React.FC = () => {
                   </motion.div>
 
                   {/* Extra designer note */}
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 text-[11px] text-amber-700 dark:text-amber-400 flex gap-2.5 align-top">
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 text-[11px] text-amber-700 dark:text-amber-400 flex gap-2.5 align-top font-sans">
                     <Sparkles size={16} className="text-amber-500 shrink-0 mt-0.5 animate-bounce" />
                     <div>
-                      <strong>Совет гильдии мастеров:</strong> Изделия с качественными деталями в описании и четкими профессиональными превью-карточками имеют на 78% больше шансов попасть в избранное покупателей. Позаботьтесь о хорошем освещении!
+                      <strong>Совет гильдии мастеров:</strong> Изделия с качественными деталями в описании и подробными превью-карточками имеют на 78% больше шансов попасть в избранное покупателей. Позаботьтесь о хорошем освещении!
                     </div>
                   </div>
 

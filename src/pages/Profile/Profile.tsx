@@ -86,6 +86,13 @@ const Profile: React.FC = () => {
           </div>
           
           <div className={styles.headerActions}>
+            <button 
+              onClick={() => dispatch(toggleRole())} 
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl transition duration-150 active:scale-95 flex items-center gap-2 cursor-pointer border border-transparent shadow-sm mr-2"
+              title="Переключить тестовую роль (Покупатель -> Мастер -> Администратор)"
+            >
+              🔄 Сменить роль (Тест)
+            </button>
             <Link to="/" className={styles.storeBtn}>
               <ShoppingBag size={20} />
               <span>В магазин</span>

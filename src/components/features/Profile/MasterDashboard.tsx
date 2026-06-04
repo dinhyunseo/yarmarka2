@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Package, DollarSign, Users, TrendingUp, Plus, Edit2, Trash2, X, Check, Image, Sparkles, AlertCircle, Tag, FileText, Link as LinkIcon, Award, Eye, Sparkle, Upload, ChevronDown } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
@@ -63,13 +63,39 @@ export const MasterDashboard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
+  // Hide global layout header when the creation/editing modal is active to prevent overlap/distraction
+  useEffect(() => {
+    const header = document.querySelector('header');
+    if (isModalOpen) {
+      if (header) {
+        header.style.transition = 'opacity 0.2s ease, visibility 0.2s';
+        header.style.opacity = '0';
+        header.style.visibility = 'hidden';
+        header.style.pointerEvents = 'none';
+      }
+    } else {
+      if (header) {
+        header.style.opacity = '1';
+        header.style.visibility = 'visible';
+        header.style.pointerEvents = 'auto';
+      }
+    }
+    return () => {
+      if (header) {
+        header.style.opacity = '1';
+        header.style.visibility = 'visible';
+        header.style.pointerEvents = 'auto';
+      }
+    };
+  }, [isModalOpen]);
+
   // Form states
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('jewelry');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState('');
-  const [imageSource, setImageSource] = useState<'link' | 'file'>('link');
+  const [isDragActive, setIsDragActive] = useState(false);
   const [isNew, setIsNew] = useState(false);
   const [isPopular, setIsPopular] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState('');
@@ -94,7 +120,7 @@ export const MasterDashboard: React.FC = () => {
     setPrice('');
     setCategory('jewelry');
     setDescription('');
-    setImage(CATEGORY_DEFAULT_IMAGES.jewelry);
+    setImage(''); // Start completely blank for user to upload their own file
     setIsNew(true); // default new products to newly created status
     setIsPopular(false);
     setFeedbackMsg('');
@@ -117,11 +143,36 @@ export const MasterDashboard: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // Quick prefill of high-quality image of the current category
-  const handleApplyDefaultImage = () => {
-    const defaultImg = CATEGORY_DEFAULT_IMAGES[category as keyof typeof CATEGORY_DEFAULT_IMAGES];
-    if (defaultImg) {
-      setImage(defaultImg);
+  // Drag and drop event handlers
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === 'string') {
+            setImage(reader.result);
+            setFeedbackMsg('');
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setFeedbackMsg('Пожалуйста, выберите файл с изображением (png, jpg, jpeg)!');
+      }
     }
   };
 
@@ -134,16 +185,21 @@ export const MasterDashboard: React.FC = () => {
       return;
     }
 
+    if (!image) {
+      setFeedbackMsg('Пожалуйста, обязательно загрузите файл изображения вашего изделия!');
+      return;
+    }
+
     const priceNum = parseFloat(price);
     if (isNaN(priceNum) || priceNum <= 0) {
       setFeedbackMsg('Пожалуйста, введите корректную цену');
       return;
     }
 
-    const finalImage = image.trim() || CATEGORY_DEFAULT_IMAGES[category as keyof typeof CATEGORY_DEFAULT_IMAGES] || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&h=500&fit=crop';
+    const finalImage = image.trim();
 
     if (editingProduct) {
-      // Edit existing
+      // Edit existing - send back to moderation queue upon modifications as per admin rules
       const updated: Product = {
         ...editingProduct,
         title: title.trim(),
@@ -151,15 +207,13 @@ export const MasterDashboard: React.FC = () => {
         category,
         description: description.trim(),
         image: finalImage,
-        isNew,
-        isPopular,
-        // Preserve author
+        isApproved: false, // returns to moderation for review
         author: editingProduct.author
       };
       dispatch(updateProduct(updated));
-      showToast('Изделие обновлено успешно!');
+      showToast('Изделие зарезервировано и отправлено на повторную модерацию!');
     } else {
-      // Create new product
+      // Create new product - always goes directly to admin moderation first
       const maxId = allProducts.length > 0 ? Math.max(...allProducts.map(p => p.id)) : 0;
       const created: Product = {
         id: maxId + 1,
@@ -168,12 +222,13 @@ export const MasterDashboard: React.FC = () => {
         category,
         description: description.trim(),
         image: finalImage,
-        isNew,
-        isPopular,
+        isNew: false, // will be assigned by Administrator if applicable
+        isPopular: false, // will be assigned by Administrator if applicable
+        isApproved: false, // needs administrator approval
         author: activeMasterName
       };
       dispatch(addProduct(created));
-      showToast('Изделие добавлено успешно!');
+      showToast('Новое творение добавлено и отправлено администратору на модерацию!');
     }
 
     setIsModalOpen(false);
@@ -289,14 +344,23 @@ export const MasterDashboard: React.FC = () => {
               <div className={styles.productInfo}>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="text-lg font-bold text-gray-900">{product.title}</h3>
-                  <div className="flex gap-1">
+                  <div className="flex gap-2.5 items-center flex-wrap">
+                    {product.isApproved === false ? (
+                      <span className="text-[10px] font-bold tracking-wider uppercase bg-amber-500/10 text-amber-600 border border-amber-300/30 px-2.5 py-0.5 rounded-full">
+                        ⏳ На модерации
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold tracking-wider uppercase bg-emerald-500/10 text-emerald-600 border border-emerald-300/30 px-2.5 py-0.5 rounded-full">
+                        ✓ Опубликован
+                      </span>
+                    )}
                     {product.isNew && (
-                      <span className="text-[10px] font-bold tracking-wider uppercase bg-amber-500 text-white px-1.5 py-0.5 rounded">
+                      <span className="text-[9px] font-black tracking-widest uppercase bg-gradient-to-r from-amber-400 to-amber-500 text-white px-1.5 py-0.5 rounded shadow-sm">
                         NEW
                       </span>
                     )}
                     {product.isPopular && (
-                      <span className="text-[10px] font-bold tracking-wider uppercase bg-red-500 text-white px-1.5 py-0.5 rounded">
+                      <span className="text-[9px] font-black tracking-widest uppercase bg-gradient-to-r from-rose-500 to-red-600 text-white px-1.5 py-0.5 rounded shadow-sm">
                         HIT
                       </span>
                     )}
@@ -315,14 +379,14 @@ export const MasterDashboard: React.FC = () => {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button 
-                  className="p-2 border border-[var(--border-color)] text-indigo-500 hover:bg-[var(--hover-bg)] rounded-xl transition-colors duration-200"
+                  className="p-2 border border-[var(--border-color)] text-indigo-500 hover:bg-[var(--hover-bg)] rounded-xl transition-colors duration-200 cursor-pointer"
                   onClick={() => handleOpenEditModal(product)}
                   title="Редактировать товар"
                 >
                   <Edit2 size={16} />
                 </button>
                 <button 
-                  className="p-2 border border-[var(--border-color)] text-red-500 hover:bg-red-500/10 rounded-xl transition-colors duration-200"
+                  className="p-2 border border-[var(--border-color)] text-red-500 hover:bg-red-500/10 rounded-xl transition-colors duration-200 cursor-pointer"
                   onClick={() => handleDeleteProduct(product.id)}
                   title="Удалить товар"
                 >
@@ -334,317 +398,353 @@ export const MasterDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Modern Compact Creation / Editing Modal Form */}
+      {/* Modern Grand Spacious Modal Form */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ type: "spring", duration: 0.35 }}
-              className="bg-[var(--card-bg)] rounded-[24px] w-full max-w-lg shadow-2xl relative border border-[var(--border-color)] overflow-hidden flex flex-col max-h-[96vh]"
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", duration: 0.4 }}
+              className="bg-[var(--card-bg)] rounded-[32px] w-full max-w-5xl shadow-2xl relative border border-[var(--border-color)] overflow-hidden flex flex-col max-h-[92vh]"
             >
               
-              {/* Header Gradient Accent */}
+              {/* Header Gradient Accent Accent */}
               <div className="h-1.5 bg-gradient-to-r from-amber-400 via-rose-500 to-indigo-600 w-full shrink-0" />
 
               {/* Header Content */}
-              <div className="px-6 py-4 border-b border-[var(--border-color)] flex items-center justify-between shrink-0 bg-[var(--bg-color)]/30">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-base shadow-inner text-indigo-500">
+              <div className="px-6 py-4 md:px-8 md:py-5 border-b border-[var(--border-color)] flex items-center justify-between shrink-0 bg-[var(--bg-color)]/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-lg shadow-inner text-indigo-500 font-bold select-none">
                     {editingProduct ? '🖋️' : '✨'}
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-[var(--text-color)] tracking-tight">
-                      {editingProduct ? 'Редактировать товар' : 'Добавить новое изделие'}
+                    <h3 className="text-lg md:text-xl font-bold text-[var(--text-color)] tracking-tight">
+                      {editingProduct ? 'Редактировать товар на витрине' : 'Добавить новое изделие'}
                     </h3>
-                    <p className="text-[10px] text-[var(--text-color)]/60 font-medium">Заполните поля для мгновенной публикации в каталоге</p>
+                    <p className="text-xs md:text-sm text-[var(--text-color)]/60 font-medium">Заполните поля для мгновенной публикации в вашей лавке</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setIsModalOpen(false)}
-                  className="text-[var(--text-color)]/55 hover:text-[var(--text-color)] p-1.5 hover:bg-[var(--hover-bg)] rounded-full transition-colors duration-150"
+                  className="text-[var(--text-color)]/55 hover:text-[var(--text-color)] p-2 hover:bg-[var(--hover-bg)] rounded-full transition-all duration-150 cursor-pointer"
                   type="button"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
               </div>
 
-              {/* Compact Workspace (without scrolling container constraint unless small heights) */}
-              <div className="flex-1 overflow-y-auto bg-[var(--card-bg)] text-[var(--text-color)]">
+              {/* Grand Multi-Column Workspace */}
+              <div className="flex-1 overflow-y-auto lg:grid lg:grid-cols-12 bg-[var(--card-bg)] text-[var(--text-color)] font-sans">
                 
-                <form onSubmit={handleSaveProduct} className="p-6 space-y-4">
-                  
-                  {/* Live Compact Horizontal Preview Card */}
-                  <div className="bg-gradient-to-r from-indigo-500/5 via-rose-500/5 to-amber-500/5 rounded-2xl p-3 border border-[var(--border-color)] flex items-center gap-3">
-                    <div className="relative w-12 h-12 rounded-xl bg-[var(--hover-bg)] border border-[var(--border-color)] overflow-hidden shrink-0">
-                      <img
-                        src={image || CATEGORY_DEFAULT_IMAGES[category as keyof typeof CATEGORY_DEFAULT_IMAGES]}
-                        alt="Превью"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = CATEGORY_DEFAULT_IMAGES[category as keyof typeof CATEGORY_DEFAULT_IMAGES] || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&h=500&fit=crop';
-                        }}
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 leading-none">
-                        <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-wider">
-                          {CATEGORY_LABELS[category] || category}
-                        </span>
-                        {isNew && <span className="text-[8px] bg-amber-500 text-white px-1 py-0.2 rounded font-extrabold uppercase">NEW</span>}
-                        {isPopular && <span className="text-[8px] bg-red-500 text-white px-1 py-0.2 rounded font-extrabold uppercase">HIT</span>}
-                      </div>
-                      <h4 className="text-xs font-bold text-[var(--text-color)] truncate mt-1">
-                        {title.trim() || 'Потрясающее название изделия...'}
-                      </h4>
-                      <p className="text-[10px] text-[var(--text-color)]/50 mt-0.5 truncate leading-none">
-                        {description.trim() || 'Ваше теплое описание ручной работы...'}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-[8px] text-[var(--text-color)]/40 block leading-none">Стоимость</span>
-                      <span className="text-sm font-bold text-[var(--text-color)] block mt-0.5">
-                        {price ? (+price).toLocaleString('ru-RU') : '0'} ₽
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Title & Price Grid */}
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="col-span-2 space-y-1">
-                      <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1">
-                        <Tag size={11} className="text-indigo-500" /> Название <span className="text-red-500">*</span>
+                {/* Form column (Left) */}
+                <form onSubmit={handleSaveProduct} className="p-6 md:p-8 space-y-5 lg:col-span-7 lg:border-r lg:border-[var(--border-color)] flex flex-col justify-between">
+                  <div className="space-y-5">
+                    
+                    {/* Title Input */}
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-[var(--text-color)]/80 flex items-center gap-2">
+                        <Tag size={16} className="text-indigo-500" /> Название изделия <span className="text-red-500">*</span>
                       </label>
                       <input 
                         type="text"
                         required
-                        placeholder="Кружка 'Лесной мох'"
+                        placeholder="Например: Кружка 'Лесной мох'"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 text-xs transition-all font-medium"
+                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] text-sm text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-medium"
                       />
                     </div>
-                    
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1">
-                        Цена (₽) <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative group">
-                        <input 
-                          type="number"
-                          required
-                          min="1"
-                          placeholder="2500"
-                          value={price}
-                          onChange={(e) => setPrice(e.target.value)}
-                          className="w-full pl-3 pr-6 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 text-xs transition-all font-semibold"
-                        />
-                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--text-color)]/40">₽</span>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Category dropdown element */}
-                  <div className="space-y-1 relative">
-                    <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1">
-                      <Award size={11} className="text-amber-500" /> Категория <span className="text-red-500">*</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
-                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-[var(--border-color)] text-xs text-[var(--text-color)] bg-[var(--input-bg)] focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all font-medium text-left"
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="text-sm shrink-0 select-none">
-                          {CATEGORY_DETAILS[category]?.icon || '🏺'}
-                        </span>
-                        <span>{CATEGORY_DETAILS[category]?.name || category}</span>
-                      </span>
-                      <ChevronDown size={14} className={`text-[var(--text-color)]/40 transition-transform duration-150 ${isCategoryDropdownOpen ? 'transform rotate-180' : ''}`} />
-                    </button>
-
-                    {/* Popover Dropdown Selection */}
-                    {isCategoryDropdownOpen && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => setIsCategoryDropdownOpen(false)} />
-                        <div className="absolute left-0 right-0 z-50 mt-1 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-xl max-h-44 overflow-y-auto p-1 divide-y divide-[var(--border-color)]/30">
-                          {Object.entries(CATEGORY_DETAILS).map(([catId, catInfo]) => {
-                            const isSelected = category === catId;
-                            return (
-                              <button
-                                type="button"
-                                key={catId}
-                                onClick={() => {
-                                  setCategory(catId);
-                                  setIsCategoryDropdownOpen(false);
-                                  const correspondImg = CATEGORY_DEFAULT_IMAGES[catId];
-                                  if (correspondImg) {
-                                    setImage(correspondImg);
-                                  }
-                                }}
-                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left text-xs transition-colors hover:bg-[var(--hover-bg)] ${
-                                  isSelected ? 'bg-indigo-500/5 text-indigo-500 font-bold' : 'text-[var(--text-color)]/80'
-                                }`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <span>{catInfo.icon}</span>
-                                  <span>{catInfo.name}</span>
-                                </span>
-                                {isSelected && <Check size={14} className="text-indigo-500 shrink-0" />}
-                              </button>
-                            );
-                          })}
+                    {/* Price and Category side-by-side */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      
+                      {/* Price fields */}
+                      <div className="space-y-1.5">
+                        <label className="text-sm font-semibold text-[var(--text-color)]/80 flex items-center gap-2">
+                          <DollarSign size={16} className="text-emerald-500" /> Стоимость (₽) <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input 
+                            type="number"
+                            required
+                            min="1"
+                            placeholder="2500"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            className="w-full pl-4 pr-10 py-3 rounded-xl border border-[var(--border-color)] text-sm text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-semibold"
+                          />
+                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--text-color)]/40">₽</span>
                         </div>
-                      </>
-                    )}
-                  </div>
+                      </div>
 
-                  {/* Description input */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1">
-                      <FileText size={11} className="text-blue-500" /> Описание творения <span className="text-red-500">*</span>
-                    </label>
-                    <textarea 
-                      required
-                      rows={2}
-                      placeholder="Какова история создания этого изделия? Опишите кратко..."
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 text-xs transition-all resize-none leading-relaxed font-normal"
-                    />
-                  </div>
-
-                  {/* Combined URL and hidden File Select upload row */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1">
-                        <Image size={11} className="text-rose-500" /> Фотография изделия
-                      </label>
-                      <button
-                        type="button"
-                        onClick={handleApplyDefaultImage}
-                        className="text-[9px] font-bold text-indigo-500 hover:text-indigo-600 flex items-center gap-1 bg-indigo-500/10 px-2 py-0.5 rounded transition-transform duration-100"
-                      >
-                        <Sparkles size={10} /> Стандартный фон
-                      </button>
-                    </div>
-
-                    <div className="flex gap-2 items-center">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const fileInput = document.getElementById('compact-file-upload') as HTMLInputElement;
-                          fileInput?.click();
-                        }}
-                        className="w-9 h-9 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] hover:bg-[var(--hover-bg)] flex items-center justify-center text-[var(--text-color)]/50 hover:text-indigo-500 cursor-pointer shrink-0 transition-colors"
-                        title="Загрузить снимок со смартфона или ПК"
-                      >
-                        <Upload size={15} />
-                      </button>
-                      <input
-                        id="compact-file-upload"
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              if (typeof reader.result === 'string') {
-                                setImage(reader.result);
-                              }
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                      />
-                      <input 
-                        type="url"
-                        placeholder="Вставьте ссылку на Unsplash или Pinterest..."
-                        value={image.startsWith('data:image') ? '' : image}
-                        onChange={(e) => setImage(e.target.value)}
-                        className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 text-xs transition-all font-medium"
-                      />
-                    </div>
-
-                    {/* Highly aesthetic material shortcut pills to instantly change images */}
-                    <div className="flex flex-wrap gap-1 bg-[var(--bg-color)]/30 p-1.5 rounded-lg border border-[var(--border-color)] mt-1.5">
-                      <span className="text-[8px] font-bold text-[var(--text-color)]/40 uppercase tracking-wider block mr-1.5 self-center">Быстрые пресеты:</span>
-                      {[
-                        { name: '🏺 Керамика', url: 'https://images.unsplash.com/photo-1612196808214-b9e1d614e380?w=500&h=500&fit=crop' },
-                        { name: '👜 Кожа', url: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=500&h=500&fit=crop' },
-                        { name: '🌲 Вяз', url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&h=500&fit=crop' },
-                        { name: '💍 Сусаль', url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=500&h=500&fit=crop' },
-                        { name: '🧶 Холст', url: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&h=500&fit=crop' }
-                      ].map((preset, idx) => (
+                      {/* Category Selector */}
+                      <div className="space-y-1.5 relative">
+                        <label className="text-sm font-semibold text-[var(--text-color)]/80 flex items-center gap-2">
+                          <Award size={16} className="text-amber-500" /> Категория <span className="text-red-500">*</span>
+                        </label>
                         <button
                           type="button"
-                          key={idx}
-                          onClick={() => setImage(preset.url)}
-                          className="text-[9px] bg-[var(--card-bg)] border border-[var(--border-color)] rounded px-1.5 py-0.5 text-[var(--text-color)]/70 hover:bg-[var(--hover-bg)] transition-colors font-medium cursor-pointer"
+                          onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                          className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-[var(--border-color)] text-sm text-[var(--text-color)] bg-[var(--input-bg)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all font-medium text-left cursor-pointer"
                         >
-                          {preset.name}
+                          <span className="flex items-center gap-2">
+                            <span className="text-base select-none">
+                              {CATEGORY_DETAILS[category]?.icon || '🏺'}
+                            </span>
+                            <span className="text-sm font-semibold">{CATEGORY_DETAILS[category]?.name || category}</span>
+                          </span>
+                          <ChevronDown size={16} className={`text-[var(--text-color)]/40 transition-transform duration-150 ${isCategoryDropdownOpen ? 'transform rotate-180' : ''}`} />
                         </button>
-                      ))}
+
+                        {/* Popover list */}
+                        {isCategoryDropdownOpen && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setIsCategoryDropdownOpen(false)} />
+                            <div className="absolute left-0 right-0 z-50 mt-1 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-xl max-h-52 overflow-y-auto p-1.5 divide-y divide-[var(--border-color)]/30">
+                              {Object.entries(CATEGORY_DETAILS).map(([catId, catInfo]) => {
+                                const isSelected = category === catId;
+                                return (
+                                  <button
+                                    type="button"
+                                    key={catId}
+                                    onClick={() => {
+                                      setCategory(catId);
+                                      setIsCategoryDropdownOpen(false);
+                                      setImage('');
+                                    }}
+                                    className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-left text-sm transition-colors hover:bg-[var(--hover-bg)] cursor-pointer ${
+                                      isSelected ? 'bg-indigo-500/5 text-indigo-500 font-bold' : 'text-[var(--text-color)]/80'
+                                    }`}
+                                  >
+                                    <span className="flex items-center gap-2">
+                                      <span className="text-base">{catInfo.icon}</span>
+                                      <span className="font-medium">{catInfo.name}</span>
+                                    </span>
+                                    {isSelected && <Check size={16} className="text-indigo-500 shrink-0" />}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </>
+                        )}
+                      </div>
+
                     </div>
+
+                    {/* Description text input */}
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-semibold text-[var(--text-color)]/80 flex items-center gap-2">
+                        <FileText size={16} className="text-blue-500" /> Описание творения <span className="text-red-500">*</span>
+                      </label>
+                      <textarea 
+                        required
+                        rows={3}
+                        placeholder="Расскажите историю создания, какие материалы и тепло души вы заложили в это неповторимое творение..."
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border border-[var(--border-color)] text-sm text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-none leading-relaxed font-normal"
+                      />
+                    </div>
+
+                    {/* Image file upload zone */}
+                    <div className="space-y-2.5">
+                      <label className="text-sm font-semibold text-[var(--text-color)]/80 flex items-center gap-2">
+                        <Image size={16} className="text-rose-500" /> Изображение изделия <span className="text-red-500">*</span>
+                      </label>
+
+                      <div 
+                        id="gp-file-dropzone"
+                        onDragEnter={handleDrag}
+                        onDragOver={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDrop={handleDrop}
+                        onClick={() => {
+                          const fileInput = document.getElementById('gp-file-upload') as HTMLInputElement;
+                          fileInput?.click();
+                        }}
+                        className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[180px] ${
+                          isDragActive 
+                            ? 'border-indigo-500 bg-indigo-500/5' 
+                            : image 
+                              ? 'border-emerald-500/30 bg-emerald-500/5' 
+                              : 'border-[var(--border-color)] bg-[var(--input-bg)] hover:bg-[var(--hover-bg)] hover:border-indigo-500/60'
+                        }`}
+                      >
+                        <input
+                          id="gp-file-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                if (typeof reader.result === 'string') {
+                                  setImage(reader.result);
+                                  setFeedbackMsg('');
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+
+                        {image ? (
+                          <div className="space-y-3 relative w-full flex flex-col items-center">
+                            <div className="relative group">
+                              <img 
+                                src={image} 
+                                alt="Загруженное превью" 
+                                className="w-28 h-28 object-cover rounded-xl border border-[var(--border-color)] shadow-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setImage('');
+                                }}
+                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 active:scale-95 text-white w-6 h-6 rounded-full flex items-center justify-center shadow transition-all cursor-pointer"
+                                title="Удалить снимок"
+                              >
+                                &times;
+                              </button>
+                            </div>
+                            <div className="text-xs text-emerald-600 font-bold flex items-center gap-1.5">
+                              <Check size={14} /> Изображение успешно прикреплено
+                            </div>
+                            <p className="text-[11px] text-[var(--text-color)]/50">Нажмите на область или перетащите файл, чтобы заменить фото</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2.5">
+                            <div className="w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500 mx-auto select-none">
+                              <Upload size={22} />
+                            </div>
+                            <div>
+                              <p className="text-xs md:text-sm font-bold text-[var(--text-color)]">
+                                Перетащите файл сюда или кликните для обзора
+                              </p>
+                              <p className="text-[11px] text-[var(--text-color)]/55 mt-1">
+                                Разрешены форматы PNG, JPG, JPEG. Качественное изображение повышает шансы на одобрение работы!
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+
+
                   </div>
 
-                  {/* Elegant low-profile switches placed side-by-side inside form */}
-                  <div className="flex items-center justify-between border-t border-[var(--border-color)] pt-3 pb-1">
-                    <span className="text-[10px] font-bold text-[var(--text-color)]/50 uppercase tracking-widest">Метки карточки</span>
-                    <div className="flex gap-2.5">
-                      {/* New Status badge switch */}
-                      <button 
-                        type="button"
-                        onClick={() => setIsNew(!isNew)}
-                        className="flex items-center gap-1.5 bg-[var(--bg-color)]/40 border border-[var(--border-color)] px-2.5 py-1 rounded-xl cursor-pointer select-none hover:bg-[var(--hover-bg)] active:scale-95 transition-all text-xs font-semibold text-[var(--text-color)]/80"
-                      >
-                        <div className={`w-5 h-3 rounded-full p-0.5 transition-colors duration-200 ${isNew ? 'bg-amber-500' : 'bg-gray-300 dark:bg-zinc-700'}`}>
-                          <div 
-                            className={`w-2 h-2 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${isNew ? 'translate-x-2' : ''}`}
-                          />
-                        </div>
-                        <span className="text-[10px]">🆕 Новинка</span>
-                      </button>
-
-                      {/* Hit Status badge switch */}
-                      <button 
-                        type="button"
-                        onClick={() => setIsPopular(!isPopular)}
-                        className="flex items-center gap-1.5 bg-[var(--bg-color)]/40 border border-[var(--border-color)] px-2.5 py-1 rounded-xl cursor-pointer select-none hover:bg-[var(--hover-bg)] active:scale-95 transition-all text-xs font-semibold text-[var(--text-color)]/80"
-                      >
-                        <div className={`w-5 h-3 rounded-full p-0.5 transition-colors duration-200 ${isPopular ? 'bg-red-500' : 'bg-gray-300 dark:bg-zinc-700'}`}>
-                          <div 
-                            className={`w-2 h-2 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${isPopular ? 'translate-x-2' : ''}`}
-                          />
-                        </div>
-                        <span className="text-[10px]">🔥 ХИТ</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Layout Action Footer buttons */}
-                  <div className="pt-3.5 border-t border-[var(--border-color)] flex items-center justify-end gap-2 shrink-0">
+                  {/* Submit and Cancel layout footer actions */}
+                  <div className="pt-5 border-t border-[var(--border-color)] flex items-center justify-end gap-3 shrink-0">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] font-semibold text-xs text-[var(--text-color)]/70 hover:text-[var(--text-color)] transition duration-200 cursor-pointer"
+                      className="px-5 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] font-semibold text-sm text-[var(--text-color)]/70 hover:text-[var(--text-color)] transition-all duration-150 cursor-pointer"
                     >
                       Отмена
                     </button>
                     <button
                       type="submit"
-                      className="px-5 py-2 rounded-xl bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] font-bold text-xs text-white transition duration-200 cursor-pointer active:scale-95 shadow-md hover:shadow-indigo-500/10"
+                      className="px-6 py-3 rounded-xl bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] font-bold text-sm text-white transition-all duration-150 cursor-pointer active:scale-95 shadow-md hover:shadow-indigo-500/10"
                     >
-                      {editingProduct ? 'Сохранить изделие' : 'Опубликовать'}
+                      {editingProduct ? 'Сохранить изделие' : 'Опубликовать на ярмарке'}
                     </button>
                   </div>
 
                 </form>
+
+                {/* Live Preview column (Right) */}
+                <div className="hidden lg:flex lg:col-span-5 bg-gradient-to-b from-[var(--bg-color)]/60 to-[var(--bg-color)]/20 p-8 flex-col justify-between overflow-y-auto">
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-[var(--text-color)]/50 uppercase tracking-widest block select-none">Интерактивный предпросмотр</span>
+                      <span className="flex h-2.5 w-2.5 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--text-color)]/60 leading-relaxed font-medium">
+                      Ниже показана ваша карточка изделия в реальном времени. В таком виде её увидят тысячи покупателей каталога ярмарки.
+                    </p>
+                  </div>
+
+                  {/* Real-time Simulated Product Card Card */}
+                  <div className="my-6 bg-[var(--card-bg)] rounded-[24px] border border-[var(--border-color)] overflow-hidden shadow-lg transition-transform duration-300">
+                    <div className="relative aspect-square w-full bg-[var(--hover-bg)] overflow-hidden">
+                      {image ? (
+                        <img
+                          src={image}
+                          alt="Превью"
+                          className="w-full h-full object-cover transition-transform duration-300"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400 p-6 text-center select-none">
+                          <Image size={36} className="text-gray-300 stroke-1.5 mb-2" />
+                          <span className="text-xs font-bold text-gray-400">Файл не выбран</span>
+                          <span className="text-[10px] text-gray-400 mt-1">Прикрепите фото изделия слева</span>
+                        </div>
+                      )}
+                      
+                      {/* Interactive Float metadata tag badges */}
+                      <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10 select-none">
+                        <span className="bg-black/55 backdrop-blur-md text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center gap-1.5">
+                          <span>{CATEGORY_DETAILS[category]?.icon}</span>
+                          <span>{CATEGORY_DETAILS[category]?.name || category}</span>
+                        </span>
+                        
+                        <div className="flex gap-1.5">
+                          {isNew && (
+                            <span className="bg-amber-500 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-sm tracking-wider uppercase">
+                              NEW
+                            </span>
+                          )}
+                          {isPopular && (
+                            <span className="bg-rose-500 text-white text-[9px] font-black px-2 py-0.5 rounded shadow-sm tracking-wider uppercase">
+                              HIT
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-5 space-y-3">
+                      <div>
+                        <span className="text-[11px] font-bold text-gray-400 select-none">Автор: {activeMasterName}</span>
+                        <h4 className="text-base font-bold text-[var(--text-color)] truncate mt-1 leading-snug">
+                          {title.trim() || 'Потрясающее название изделия...'}
+                        </h4>
+                      </div>
+                      
+                      <p className="text-xs text-[var(--text-color)]/70 line-clamp-2 h-8 leading-relaxed">
+                        {description.trim() || 'Сюда мгновенно транслируется ваше теплое описание ручной работы...'}
+                      </p>
+
+                      <div className="pt-3 border-t border-[var(--border-color)]/60 flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] text-gray-400 block font-semibold leading-none">Стоимость изделия</span>
+                          <span className="text-lg font-black text-[var(--text-color)] mt-1 block tracking-tight">
+                            {price ? (+price).toLocaleString('ru-RU') : '0'} ₽
+                          </span>
+                        </div>
+                        <span className="text-xs font-bold text-indigo-500 bg-indigo-500/10 px-3 py-1.5 rounded-xl select-none">
+                          В каталог
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] text-[var(--text-color)]/40 text-center select-none font-medium">
+                    Свежие данные синхронизированы с базой данных лавки.
+                  </div>
+
+                </div>
 
               </div>
             </motion.div>

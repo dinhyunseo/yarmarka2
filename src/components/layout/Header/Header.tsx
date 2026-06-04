@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../store';
 import { type CartItem } from '../../../types';
 import { ThemeToggle } from '../../ui/ThemeToggle/ThemeToggle';
+import { Cart } from '../../ui/Cart/Cart';
 import { User } from 'lucide-react';
 import styles from './Header.module.css';
 
@@ -19,12 +20,25 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ 
   searchTerm = '', 
   onSearchChange, 
-  cartItems = [],
+  cartItems,
   onCartClick,
   isMenuOpen = false,
   onMenuToggle
 }) => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const reduxCartItems = useSelector((state: RootState) => state.cart.items);
+  const [localCartOpen, setLocalCartOpen] = useState(false);
+
+  // Fallback to redux state if prop not provided
+  const itemsToUse = cartItems ?? reduxCartItems;
+
+  const handleCartClick = () => {
+    if (onCartClick) {
+      onCartClick();
+    } else {
+      setLocalCartOpen(true);
+    }
+  };
 
   return (
     <header className={styles.header}>
@@ -41,8 +55,8 @@ export const Header: React.FC<HeaderProps> = ({
           </Link>
           <div className={styles.headerActions}>
             <ThemeToggle />
-            <button className={styles.cartIcon} onClick={onCartClick}>
-              🛒 ({cartItems.length})
+            <button className={styles.cartIcon} onClick={handleCartClick}>
+              🛒 ({itemsToUse.length})
             </button>
             <div className={styles.userActions}>
               {isAuthenticated ? (
@@ -80,6 +94,8 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         )}
       </div>
+
+      {localCartOpen && <Cart onClose={() => setLocalCartOpen(false)} />}
     </header>
   );
 };

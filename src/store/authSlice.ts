@@ -33,6 +33,18 @@ const authSlice = createSlice({
         }
       }
     },
+    setRole: (state, action: PayloadAction<UserRole>) => {
+      if (state.user) {
+        state.user.role = action.payload;
+        if (action.payload === 'admin') {
+          state.user.name = 'Администратор Ярмарки';
+        } else if (action.payload === 'master') {
+          state.user.name = 'Мастер Александр';
+        } else {
+          state.user.name = 'Александр (Покупатель)';
+        }
+      }
+    },
     logout: (state) => {
       state.user = null;
       state.isAuthenticated = false;
@@ -40,5 +52,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, toggleRole, logout } = authSlice.actions;
+export const { setUser, toggleRole, setRole, logout } = authSlice.actions;
 export default authSlice.reducer;

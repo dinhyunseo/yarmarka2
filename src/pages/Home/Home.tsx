@@ -38,7 +38,9 @@ export const Home: React.FC = () => {
   const cartItems = useSelector<RootState, CartItem[]>((state) => state.cart.items);
 
   const filteredProducts = useMemo(() => {
-    let list = filterProducts(products, searchTerm, selectedCategory);
+    // Only show items that are approved (or have no approval flag which defaults to approved)
+    const approvedOnly = products.filter(p => p.isApproved !== false);
+    let list = filterProducts(approvedOnly, searchTerm, selectedCategory);
     if (activeTab === 'new') {
       list = list.filter(p => p.isNew);
     } else if (activeTab === 'popular') {

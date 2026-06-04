@@ -1,8 +1,9 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { Header } from '../../components/layout/Header/Header';
+import { addToCart } from '../../store/cartSlice';
 import { ArrowLeft, Star, MapPin, Briefcase, Package, MessageSquare, Heart, Share2, CheckCircle, ExternalLink } from 'lucide-react';
 import { motion } from 'motion/react';
 import { formatPrice } from '../../utils/helpers';
@@ -67,17 +68,35 @@ const mastersData = {
 export const MasterProfile: React.FC = () => {
   const { masterId } = useParams<{ masterId: string }>();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [isSidebarOpen, setSidebarOpen] = React.useState(false);
   const [isMessaging, setIsMessaging] = React.useState(false);
   const [message, setMessage] = React.useState('');
   const [messageSent, setMessageSent] = React.useState(false);
 
+  // High-polish interactive states
+  const [isFavoriteMaster, setIsFavoriteMaster] = React.useState(false);
+  const [favoritedProducts, setFavoritedProducts] = React.useState<Record<number, boolean>>({});
+  const [toastMessage, setToastMessage] = React.useState<string | null>(null);
+  const [loadedCount, setLoadedCount] = React.useState<number>(3);
+
   const master = mastersData[masterId as keyof typeof mastersData];
   const allProducts = useSelector((state: RootState) => state.products.items);
 
   const masterProducts = React.useMemo(() => {
-    return allProducts.filter(p => p.author === master?.name);
+    return allProducts.filter(p => p.author === master?.name && p.isApproved !== false);
   }, [allProducts, master?.name]);
+
+  const visibleProducts = React.useMemo(() => {
+    return masterProducts.slice(0, loadedCount);
+  }, [masterProducts, loadedCount]);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,8 +109,18 @@ export const MasterProfile: React.FC = () => {
       setTimeout(() => {
         setMessageSent(false);
         setIsMessaging(false);
+        showToast('Ваше сообщение отправлено мастеру!');
       }, 3000);
     }, 1000);
+  };
+
+  const handleLoadMore = () => {
+    if (loadedCount >= masterProducts.length) {
+      showToast('Все работы мастера уже показаны на витрине!');
+    } else {
+      setLoadedCount(prev => prev + 3);
+      showToast('Показаны новые творения автора!');
+    }
   };
 
   if (!master) {
@@ -151,10 +180,25 @@ export const MasterProfile: React.FC = () => {
                   <MessageSquare size={20} />
                   {isMessaging ? 'Закрыть чат' : 'Написать мастеру'}
                 </button>
-                <button className={styles.secondaryBtn}>
-                  <Heart size={20} />
+                <button 
+                  className={`${styles.secondaryBtn} ${isFavoriteMaster ? styles.activeFavorite : ''}`}
+                  onClick={() => {
+                    setIsFavoriteMaster(!isFavoriteMaster);
+                    showToast(isFavoriteMaster ? 'Мастер убран из избранного' : 'Мастер добавлен в избранное!');
+                  }}
+                  style={{ color: isFavoriteMaster ? '#f43f5e' : 'inherit' }}
+                  title={isFavoriteMaster ? 'Убрать из избранного' : 'Добавить в избранное'}
+                >
+                  <Heart size={20} fill={isFavoriteMaster ? '#f43f5e' : 'none'} />
                 </button>
-                <button className={styles.secondaryBtn}>
+                <button 
+                  className={styles.secondaryBtn}
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    showToast('Ссылка на профиль мастера скопирована в буфер обмена!');
+                  }}
+                  title="Поделиться профилем"
+                >
                   <Share2 size={20} />
                 </button>
               </div>
@@ -202,7 +246,7 @@ export const MasterProfile: React.FC = () => {
           </div>
           
           <div className={styles.grid}>
-            {masterProducts.map(product => (
+            {visibleProducts.map(product => (
               <motion.div 
                 key={product.id}
                 className={styles.productCard}
@@ -210,22 +254,67 @@ export const MasterProfile: React.FC = () => {
               >
                 <div className={styles.productImage}>
                   <img src={product.image} alt={product.title} />
-                  <button className={styles.wishlistBtn}><Heart size={18} /></button>
+                  <button 
+                    className={styles.wishlistBtn}
+                    onClick={() => {
+                      const isFav = !!favoritedProducts[product.id];
+                      setFavoritedProducts(prev => ({ ...prev, [product.id]: !isFav }));
+                      showToast(isFav ? `Изделие "${product.title}" убрано из избранного` : `Изделие "${product.title}" добавлено в избранное!`);
+                    }}
+                    style={{ color: favoritedProducts[product.id] ? '#f43f5e' : 'inherit' }}
+                  >
+                    <Heart size={18} fill={favoritedProducts[product.id] ? '#f43f5e' : 'none'} />
+                  </button>
                 </div>
                 <div className={styles.productInfo}>
                   <h3>{product.title}</h3>
                   <div className={styles.productFooter}>
                     <span className={styles.price}>{formatPrice(product.price)}</span>
-                    <button className={styles.addCartBtn}><Package size={18} /></button>
+                    <button 
+                      className={styles.addCartBtn}
+                      onClick={() => {
+                        dispatch(addToCart(product));
+                        showToast(`Изделие "${product.title}" добавлено в корзину!`);
+                      }}
+                      title="Добавить в корзину"
+                    >
+                      <Package size={18} />
+                    </button>
                   </div>
                 </div>
               </motion.div>
             ))}
           </div>
           
-          <button className={styles.loadMore}>Посмотреть все изделия</button>
+          <button className={styles.loadMore} onClick={handleLoadMore}>
+            Посмотреть все изделия
+          </button>
         </section>
       </main>
+
+      {/* Render beautiful custom toast alert */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          background: 'var(--card-bg, #ffffff)',
+          color: 'var(--text-color, #1f2937)',
+          border: '1px solid var(--border-color, #e5e7eb)',
+          padding: '12px 24px',
+          borderRadius: '16px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+          zIndex: 1000,
+          fontWeight: 600,
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }} className="animate-fade-in shadow-xl blur-none">
+          <CheckCircle size={18} color="#10b981" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 };

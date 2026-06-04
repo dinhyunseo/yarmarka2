@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Package, DollarSign, Users, TrendingUp, Plus, Edit2, Trash2, X, Check, Image, Sparkles, AlertCircle, Tag, FileText, Link as LinkIcon, Award, Eye, Sparkle, Upload } from 'lucide-react';
+import { Package, DollarSign, Users, TrendingUp, Plus, Edit2, Trash2, X, Check, Image, Sparkles, AlertCircle, Tag, FileText, Link as LinkIcon, Award, Eye, Sparkle, Upload, ChevronDown } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
 import { addProduct, updateProduct, removeProduct } from '../../../store/productsSlice';
@@ -73,6 +73,7 @@ export const MasterDashboard: React.FC = () => {
   const [isNew, setIsNew] = useState(false);
   const [isPopular, setIsPopular] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState('');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
 
   // Auto-set stats
   const activeStatsProductsCount = useMemo(() => {
@@ -97,6 +98,7 @@ export const MasterDashboard: React.FC = () => {
     setIsNew(true); // default new products to newly created status
     setIsPopular(false);
     setFeedbackMsg('');
+    setIsCategoryDropdownOpen(false);
     setIsModalOpen(true);
   };
 
@@ -111,6 +113,7 @@ export const MasterDashboard: React.FC = () => {
     setIsNew(!!product.isNew);
     setIsPopular(!!product.isPopular);
     setFeedbackMsg('');
+    setIsCategoryDropdownOpen(false);
     setIsModalOpen(true);
   };
 
@@ -331,409 +334,317 @@ export const MasterDashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Modern Creation / Editing Modal Form */}
+      {/* Modern Compact Creation / Editing Modal Form */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ type: "spring", duration: 0.4 }}
-              className="bg-[var(--card-bg)] rounded-[32px] w-full max-w-5xl shadow-2xl relative border border-[var(--border-color)] overflow-hidden flex flex-col max-h-[90vh]"
+              transition={{ type: "spring", duration: 0.35 }}
+              className="bg-[var(--card-bg)] rounded-[24px] w-full max-w-lg shadow-2xl relative border border-[var(--border-color)] overflow-hidden flex flex-col max-h-[96vh]"
             >
               
               {/* Header Gradient Accent */}
-              <div className="h-2 bg-gradient-to-r from-amber-400 via-rose-500 to-indigo-600 w-full shrink-0" />
+              <div className="h-1.5 bg-gradient-to-r from-amber-400 via-rose-500 to-indigo-600 w-full shrink-0" />
 
               {/* Header Content */}
-              <div className="px-8 py-5 border-b border-[var(--border-color)] flex items-center justify-between shrink-0 bg-[var(--bg-color)]/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-xl shadow-inner text-indigo-500">
+              <div className="px-6 py-4 border-b border-[var(--border-color)] flex items-center justify-between shrink-0 bg-[var(--bg-color)]/30">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center text-base shadow-inner text-indigo-500">
                     {editingProduct ? '🖋️' : '✨'}
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-[var(--text-color)] tracking-tight">
-                      {editingProduct ? 'Редактировать шедевр' : 'Создание нового изделия'}
+                    <h3 className="text-base font-bold text-[var(--text-color)] tracking-tight">
+                      {editingProduct ? 'Редактировать товар' : 'Добавить новое изделие'}
                     </h3>
-                    <p className="text-xs text-[var(--text-color)]/60 font-medium">После сохранения товар мгновенно появится на вашей витрине и в общем каталоге</p>
+                    <p className="text-[10px] text-[var(--text-color)]/60 font-medium">Заполните поля для мгновенной публикации в каталоге</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setIsModalOpen(false)}
-                  className="text-[var(--text-color)]/55 hover:text-[var(--text-color)] p-2 hover:bg-[var(--hover-bg)] rounded-full transition-colors duration-150"
+                  className="text-[var(--text-color)]/55 hover:text-[var(--text-color)] p-1.5 hover:bg-[var(--hover-bg)] rounded-full transition-colors duration-150"
                   type="button"
                 >
-                  <X size={20} />
+                  <X size={18} />
                 </button>
               </div>
 
-              {/* Scrollable multi-column workspace */}
-              <div className="flex-1 overflow-y-auto lg:grid lg:grid-cols-12 bg-[var(--card-bg)] text-[var(--text-color)] font-sans">
+              {/* Compact Workspace (without scrolling container constraint unless small heights) */}
+              <div className="flex-1 overflow-y-auto bg-[var(--card-bg)] text-[var(--text-color)]">
                 
-                {/* LEFT COLUMN: Highly tailored visual Inputs Form (col-span-7) */}
-                <form onSubmit={handleSaveProduct} className="p-8 space-y-6 lg:col-span-7 border-r border-[var(--border-color)]">
+                <form onSubmit={handleSaveProduct} className="p-6 space-y-4">
                   
-                  {/* Title Input */}
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1.5">
-                      <Tag size={13} className="text-indigo-500" /> Название изделия <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative group">
-                      <input 
-                        type="text"
-                        required
-                        placeholder="Например: Глиняная кружка 'Лесной мох'"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className="w-full pl-4 pr-4 py-3 rounded-2xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm transition-all font-medium group-hover:border-[var(--text-color)]/30"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Price Input */}
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1.5">
-                      Цена изделия (₽) <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative group">
-                      <input 
-                        type="number"
-                        required
-                        min="1"
-                        placeholder="2500"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        className="w-full pl-4 pr-12 py-3 rounded-2xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm transition-all font-semibold group-hover:border-[var(--text-color)]/30"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--text-color)]/40">₽</span>
-                    </div>
-                  </div>
-
-                  {/* Category select as an elegant vertical check list */}
-                  <div className="space-y-2.5">
-                    <label className="text-[11px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1.5">
-                      <Award size={13} className="text-amber-500" /> Выберите категорию <span className="text-red-500">*</span>
-                    </label>
-                    
-                    <div className="space-y-1 max-h-[220px] overflow-y-auto border border-[var(--border-color)] rounded-2xl p-2 bg-[var(--input-bg)]">
-                      {Object.entries(CATEGORY_DETAILS).map(([catId, catInfo]) => {
-                        const isSelected = category === catId;
-                        return (
-                          <button
-                            type="button"
-                            key={catId}
-                            onClick={() => {
-                              setCategory(catId);
-                              // Auto update placeholder image matching chosen category material texture
-                              const correspondImg = CATEGORY_DEFAULT_IMAGES[catId];
-                              if (correspondImg) {
-                                setImage(correspondImg);
-                              }
-                            }}
-                            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-all ${
-                              isSelected 
-                                ? 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 font-semibold' 
-                                : 'border border-transparent text-[var(--text-color)]/80 hover:bg-[var(--hover-bg)]'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="text-xl shrink-0 select-none">{catInfo.icon}</span>
-                              <div className="leading-tight">
-                                <span className="text-xs font-bold block">{catInfo.name}</span>
-                                <span className="text-[10px] opacity-60 font-medium block mt-0.5">{catInfo.desc}</span>
-                              </div>
-                            </div>
-                            {isSelected && <Check size={16} className="text-indigo-500 shrink-0" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Description Input */}
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1.5">
-                      <FileText size={13} className="text-blue-500" /> Описание творения <span className="text-red-500">*</span>
-                    </label>
-                    <textarea 
-                      required
-                      rows={3}
-                      placeholder="Какова история создания этого изделия? Какие благородные материалы и инструменты вы использовали? Подарите покупателю чувство уникальности..."
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="w-full px-4 py-3 rounded-2xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm transition-all resize-none group-hover:border-[var(--text-color)]/30 font-normal leading-relaxed"
-                    />
-                  </div>
-
-                  {/* Image input and beautiful textures */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1.5">
-                        <Image size={13} className="text-rose-500" /> Изображение изделия
-                      </label>
-                      <button
-                        type="button"
-                        onClick={handleApplyDefaultImage}
-                        className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 flex items-center gap-1 bg-indigo-500/10 px-3 py-1 rounded-lg transition-transform"
-                        title="Применить высококачественный снимок Unsplash"
-                      >
-                        <Sparkles size={11} className="animate-pulse" /> Сбросить на фото категории
-                      </button>
-                    </div>
-
-                    {/* Toggle between Link and File */}
-                    <div className="flex bg-[var(--bg-color)]/70 p-1 rounded-xl border border-[var(--border-color)] w-max">
-                      <button
-                        type="button"
-                        onClick={() => setImageSource('link')}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider select-none transition-all ${
-                          imageSource === 'link'
-                            ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                            : 'text-[var(--text-color)]/55 hover:text-[var(--text-color)]'
-                        }`}
-                      >
-                        Ссылка
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setImageSource('file')}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold uppercase tracking-wider select-none transition-all ${
-                          imageSource === 'file'
-                            ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                            : 'text-[var(--text-color)]/55 hover:text-[var(--text-color)]'
-                        }`}
-                      >
-                        Файл
-                      </button>
-                    </div>
-
-                    {imageSource === 'link' ? (
-                      <input 
-                        type="url"
-                        placeholder="Вставьте ссылку на ваше фото с внешнего ресурса (Unsplash, Pinterest, etc.)"
-                        value={image.startsWith('data:image') ? '' : image}
-                        onChange={(e) => setImage(e.target.value)}
-                        className="w-full px-4 py-3 rounded-2xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 text-sm transition-all font-medium"
-                      />
-                    ) : (
-                      <div className="border border-dashed border-[var(--border-color)] rounded-2xl p-6 bg-[var(--input-bg)] text-center relative group hover:border-indigo-500/50 transition-colors">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => {
-                                if (typeof reader.result === 'string') {
-                                  setImage(reader.result);
-                                }
-                              };
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <Upload size={24} className="text-gray-400 group-hover:text-indigo-500 transition-colors" />
-                          <div className="text-xs font-semibold text-[var(--text-color)]">
-                            {image.startsWith('data:image') ? '✓ Изображение загружено. Кликните для замены' : 'Нажмите для выбора файла'}
-                          </div>
-                          <span className="text-[10px] text-[var(--text-color)]/50">PNG, JPG, WebP, SVG</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Quick high quality helper material shortcuts to quickly make the image beautiful */}
-                    <div>
-                      <span className="text-[10px] font-bold text-[var(--text-color)]/40 uppercase tracking-wider block mb-2">Быстрый подбор текстуры материала</span>
-                      <div className="flex flex-wrap gap-2">
-                        {[
-                          { name: '🏺 Глина/Глазурь', url: 'https://images.unsplash.com/photo-1612196808214-b9e1d614e380?w=500&h=500&fit=crop' },
-                          { name: '👜 Нат. Кожа', url: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=500&h=500&fit=crop' },
-                          { name: '🌲 Ценный Вяз', url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&h=500&fit=crop' },
-                          { name: '💍 Ковка', url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=500&h=500&fit=crop' },
-                          { name: '🧶 Лён/Ткань', url: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&h=500&fit=crop' }
-                        ].map((preset, idx) => (
-                          <button
-                            type="button"
-                            key={idx}
-                            onClick={() => {
-                              setImage(preset.url);
-                              setImageSource('link');
-                            }}
-                            className="text-xs bg-[var(--bg-color)] border border-[var(--border-color)] rounded-xl px-2.5 py-1.5 text-[var(--text-color)]/70 hover:bg-[var(--hover-bg)] transition-colors font-medium cursor-pointer"
-                          >
-                            {preset.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Elegant Toggle Switches for New and Hit tags */}
-                  <div className="bg-gradient-to-tr from-[var(--bg-color)] to-[var(--hover-bg)] rounded-2xl p-4 border border-[var(--border-color)]">
-                    <div className="flex flex-col sm:flex-row gap-5 items-stretch sm:items-center justify-between">
-                      <div>
-                        <span className="text-[11px] font-bold text-[var(--text-color)]/80 uppercase tracking-widest block font-bold leading-none">Настройки показов</span>
-                        <span className="text-[10px] text-[var(--text-color)]/50 mt-0.5 block leading-tight">Ярлыки помогают покупателям находить ваши новинки и бестселлеры быстрее</span>
-                      </div>
-
-                      <div className="flex gap-4">
-                        {/* New status badge toggler */}
-                        <div 
-                          onClick={() => setIsNew(!isNew)}
-                          className="flex items-center gap-2 bg-[var(--card-bg)] border border-[var(--border-color)] px-3 py-2 rounded-xl cursor-pointer select-none hover:bg-indigo-500/10 active:scale-95 transition-all"
-                        >
-                          <div className={`w-8 h-5 rounded-full p-0.5 transition-colors duration-200 ${isNew ? 'bg-amber-500' : 'bg-[var(--border-color)]'}`}>
-                            <motion.div 
-                              layout 
-                              className="w-4 h-4 rounded-full bg-white shadow-md"
-                              animate={{ x: isNew ? 12 : 0 }}
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-[var(--text-color)]/90">🆕 Новинка</span>
-                        </div>
-
-                        {/* Popular status badge toggler */}
-                        <div 
-                          onClick={() => setIsPopular(!isPopular)}
-                          className="flex items-center gap-2 bg-[var(--card-bg)] border border-[var(--border-color)] px-3 py-2 rounded-xl cursor-pointer select-none hover:bg-indigo-500/10 active:scale-95 transition-all"
-                        >
-                          <div className={`w-8 h-5 rounded-full p-0.5 transition-colors duration-200 ${isPopular ? 'bg-red-500' : 'bg-[var(--border-color)]'}`}>
-                            <motion.div 
-                              layout 
-                              className="w-4 h-4 rounded-full bg-white shadow-md"
-                              animate={{ x: isPopular ? 12 : 0 }}
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-[var(--text-color)]/90">🔥 Популярное</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="pt-4 border-t border-[var(--border-color)] flex items-center justify-end gap-3 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setIsModalOpen(false)}
-                      className="px-5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] font-semibold text-xs text-[var(--text-color)]/70 hover:text-[var(--text-color)] transition duration-200 cursor-pointer"
-                    >
-                      Отмена
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-6 py-2.5 rounded-xl bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] font-bold text-xs text-white transition duration-200 cursor-pointer active:scale-95"
-                    >
-                      {editingProduct ? 'Сохранить изменения' : 'Опубликовать на ярмарке'}
-                    </button>
-                  </div>
-                </form>
-
-                {/* RIGHT COLUMN: Interactive live real-time simulation product preview! (col-span-12 lg:col-span-5) */}
-                <div className="p-8 lg:col-span-5 bg-gradient-to-b from-[var(--bg-color)] to-[var(--hover-bg)] flex flex-col justify-between space-y-6">
-                  
-                  {/* Decorative Banner */}
-                  <div className="text-left space-y-1">
-                    <span className="text-[10px] font-bold text-[var(--accent-color)] uppercase tracking-widest flex items-center gap-1.5">
-                      <Eye size={12} /> Живой интерактивный просмотр
-                    </span>
-                    <h4 className="text-sm font-bold text-[var(--text-color)]">Ваша карточка на витрине</h4>
-                    <p className="text-xs text-[var(--text-color)]/50">Так ваше предложение будет выглядеть в поисковой ленте покупателей с учетом его параметров.</p>
-                  </div>
-
-                  {/* Gorgeous simulated Product Card Mockup */}
-                  <motion.div 
-                    whileHover={{ y: -4 }}
-                    className="bg-[var(--card-bg)] rounded-[24px] overflow-hidden shadow-xl border border-[var(--border-color)] flex flex-col transition-all relative w-full max-w-sm mx-auto self-center select-none"
-                  >
-                    {/* Visual Badges floating */}
-                    {(isNew || isPopular) && (
-                      <div className="absolute top-4 left-4 z-10 flex flex-col gap-1.5">
-                        {isNew && (
-                          <span className="text-[9px] font-extrabold tracking-wider uppercase bg-amber-500 text-white px-2 py-1 rounded-lg shadow-lg flex items-center gap-1 select-none">
-                            <Sparkle size={9} /> NEW
-                          </span>
-                        )}
-                        {isPopular && (
-                          <span className="text-[9px] font-extrabold tracking-wider uppercase bg-red-500 text-white px-2 py-1 rounded-lg shadow-lg flex items-center gap-1 select-none">
-                            🔥 ХИТ
-                          </span>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Image space with micro-interactivity zoom */}
-                    <div className="relative aspect-square w-full bg-[var(--hover-bg)] overflow-hidden group">
+                  {/* Live Compact Horizontal Preview Card */}
+                  <div className="bg-gradient-to-r from-indigo-500/5 via-rose-500/5 to-amber-500/5 rounded-2xl p-3 border border-[var(--border-color)] flex items-center gap-3">
+                    <div className="relative w-12 h-12 rounded-xl bg-[var(--hover-bg)] border border-[var(--border-color)] overflow-hidden shrink-0">
                       <img
                         src={image || CATEGORY_DEFAULT_IMAGES[category as keyof typeof CATEGORY_DEFAULT_IMAGES]}
-                        alt="Предварительный просмотр"
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        alt="Превью"
+                        className="w-full h-full object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = CATEGORY_DEFAULT_IMAGES[category as keyof typeof CATEGORY_DEFAULT_IMAGES] || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&h=500&fit=crop';
                         }}
                         referrerPolicy="no-referrer"
                       />
-                      
-                      {/* Interactive Author Badge */}
-                      <div className="absolute bottom-4 left-4 right-4 bg-[var(--card-bg)]/94 backdrop-blur-md rounded-xl p-2.5 border border-[var(--border-color)] flex items-center gap-2 shadow-md">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-indigo-500 to-rose-500 flex items-center justify-center text-[10px] text-white font-bold shrink-0">
-                          {activeMasterName.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div className="leading-tight">
-                          <span className="text-[8px] text-[var(--text-color)]/50 uppercase tracking-wider block font-bold leading-none">Мастер-создатель</span>
-                          <span className="text-[11px] font-extrabold text-[var(--text-color)] leading-none">{activeMasterName}</span>
-                        </div>
-                      </div>
                     </div>
-
-                    {/* Content area inside card mockup */}
-                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                      <div className="space-y-1.5">
-                        {/* Selected Category Label */}
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-[var(--accent-color)] uppercase tracking-widest mt-0.5">
-                          {CATEGORY_DETAILS[category as keyof typeof CATEGORY_DETAILS]?.icon || '🏺'}{' '}
-                          {CATEGORY_DETAILS[category as keyof typeof CATEGORY_DETAILS]?.name || category}
-                        </div>
-
-                        {/* Real-time title input tracker */}
-                        <h3 className="text-base font-bold text-[var(--text-color)] tracking-tight line-clamp-1">
-                          {title.trim() || 'Ваше потрясающее название'}
-                        </h3>
-
-                        {/* Real-time description quote tracker */}
-                        <p className="text-xs text-[var(--text-color)]/60 leading-relaxed font-normal line-clamp-2">
-                          {description.trim() || 'Здесь появится красивое теплое описание ручной работы, завлекающее посетителей.'}
-                        </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 leading-none">
+                        <span className="text-[9px] font-bold text-indigo-500 uppercase tracking-wider">
+                          {CATEGORY_LABELS[category] || category}
+                        </span>
+                        {isNew && <span className="text-[8px] bg-amber-500 text-white px-1 py-0.2 rounded font-extrabold uppercase">NEW</span>}
+                        {isPopular && <span className="text-[8px] bg-red-500 text-white px-1 py-0.2 rounded font-extrabold uppercase">HIT</span>}
                       </div>
-
-                      {/* Card price mock and CTA button row */}
-                      <div className="flex items-center justify-between pt-3 border-t border-[var(--border-color)]">
-                        <div className="leading-none">
-                          <span className="text-[9px] text-[var(--text-color)]/55 block pb-1">Цена изделия</span>
-                          <span className="text-lg font-bold text-[var(--text-color)] leading-none">
-                            {price ? (+price).toLocaleString('ru-RU') : '0'} ₽
-                          </span>
-                        </div>
-
-                        <div className="bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] text-white rounded-xl text-xs font-bold px-4 py-2 border-0 shadow-md shadow-[var(--accent-color)]/20 transition-all select-none">
-                          В корзину
-                        </div>
-                      </div>
+                      <h4 className="text-xs font-bold text-[var(--text-color)] truncate mt-1">
+                        {title.trim() || 'Потрясающее название изделия...'}
+                      </h4>
+                      <p className="text-[10px] text-[var(--text-color)]/50 mt-0.5 truncate leading-none">
+                        {description.trim() || 'Ваше теплое описание ручной работы...'}
+                      </p>
                     </div>
-                  </motion.div>
-
-                  {/* Extra designer note */}
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 text-[11px] text-amber-700 dark:text-amber-400 flex gap-2.5 align-top font-sans">
-                    <Sparkles size={16} className="text-amber-500 shrink-0 mt-0.5 animate-bounce" />
-                    <div>
-                      <strong>Совет гильдии мастеров:</strong> Изделия с качественными деталями в описании и подробными превью-карточками имеют на 78% больше шансов попасть в избранное покупателей. Позаботьтесь о хорошем освещении!
+                    <div className="text-right shrink-0">
+                      <span className="text-[8px] text-[var(--text-color)]/40 block leading-none">Стоимость</span>
+                      <span className="text-sm font-bold text-[var(--text-color)] block mt-0.5">
+                        {price ? (+price).toLocaleString('ru-RU') : '0'} ₽
+                      </span>
                     </div>
                   </div>
 
-                </div>
+                  {/* Title & Price Grid */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="col-span-2 space-y-1">
+                      <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1">
+                        <Tag size={11} className="text-indigo-500" /> Название <span className="text-red-500">*</span>
+                      </label>
+                      <input 
+                        type="text"
+                        required
+                        placeholder="Кружка 'Лесной мох'"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 text-xs transition-all font-medium"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1">
+                        Цена (₽) <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative group">
+                        <input 
+                          type="number"
+                          required
+                          min="1"
+                          placeholder="2500"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          className="w-full pl-3 pr-6 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 text-xs transition-all font-semibold"
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--text-color)]/40">₽</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Category dropdown element */}
+                  <div className="space-y-1 relative">
+                    <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1">
+                      <Award size={11} className="text-amber-500" /> Категория <span className="text-red-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-[var(--border-color)] text-xs text-[var(--text-color)] bg-[var(--input-bg)] focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all font-medium text-left"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-sm shrink-0 select-none">
+                          {CATEGORY_DETAILS[category]?.icon || '🏺'}
+                        </span>
+                        <span>{CATEGORY_DETAILS[category]?.name || category}</span>
+                      </span>
+                      <ChevronDown size={14} className={`text-[var(--text-color)]/40 transition-transform duration-150 ${isCategoryDropdownOpen ? 'transform rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Popover Dropdown Selection */}
+                    {isCategoryDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsCategoryDropdownOpen(false)} />
+                        <div className="absolute left-0 right-0 z-50 mt-1 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-xl max-h-44 overflow-y-auto p-1 divide-y divide-[var(--border-color)]/30">
+                          {Object.entries(CATEGORY_DETAILS).map(([catId, catInfo]) => {
+                            const isSelected = category === catId;
+                            return (
+                              <button
+                                type="button"
+                                key={catId}
+                                onClick={() => {
+                                  setCategory(catId);
+                                  setIsCategoryDropdownOpen(false);
+                                  const correspondImg = CATEGORY_DEFAULT_IMAGES[catId];
+                                  if (correspondImg) {
+                                    setImage(correspondImg);
+                                  }
+                                }}
+                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left text-xs transition-colors hover:bg-[var(--hover-bg)] ${
+                                  isSelected ? 'bg-indigo-500/5 text-indigo-500 font-bold' : 'text-[var(--text-color)]/80'
+                                }`}
+                              >
+                                <span className="flex items-center gap-2">
+                                  <span>{catInfo.icon}</span>
+                                  <span>{catInfo.name}</span>
+                                </span>
+                                {isSelected && <Check size={14} className="text-indigo-500 shrink-0" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Description input */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1">
+                      <FileText size={11} className="text-blue-500" /> Описание творения <span className="text-red-500">*</span>
+                    </label>
+                    <textarea 
+                      required
+                      rows={2}
+                      placeholder="Какова история создания этого изделия? Опишите кратко..."
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 text-xs transition-all resize-none leading-relaxed font-normal"
+                    />
+                  </div>
+
+                  {/* Combined URL and hidden File Select upload row */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-bold text-[var(--text-color)]/60 uppercase tracking-widest flex items-center gap-1">
+                        <Image size={11} className="text-rose-500" /> Фотография изделия
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleApplyDefaultImage}
+                        className="text-[9px] font-bold text-indigo-500 hover:text-indigo-600 flex items-center gap-1 bg-indigo-500/10 px-2 py-0.5 rounded transition-transform duration-100"
+                      >
+                        <Sparkles size={10} /> Стандартный фон
+                      </button>
+                    </div>
+
+                    <div className="flex gap-2 items-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const fileInput = document.getElementById('compact-file-upload') as HTMLInputElement;
+                          fileInput?.click();
+                        }}
+                        className="w-9 h-9 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] hover:bg-[var(--hover-bg)] flex items-center justify-center text-[var(--text-color)]/50 hover:text-indigo-500 cursor-pointer shrink-0 transition-colors"
+                        title="Загрузить снимок со смартфона или ПК"
+                      >
+                        <Upload size={15} />
+                      </button>
+                      <input
+                        id="compact-file-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              if (typeof reader.result === 'string') {
+                                setImage(reader.result);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <input 
+                        type="url"
+                        placeholder="Вставьте ссылку на Unsplash или Pinterest..."
+                        value={image.startsWith('data:image') ? '' : image}
+                        onChange={(e) => setImage(e.target.value)}
+                        className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-color)] bg-[var(--input-bg)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-600 text-xs transition-all font-medium"
+                      />
+                    </div>
+
+                    {/* Highly aesthetic material shortcut pills to instantly change images */}
+                    <div className="flex flex-wrap gap-1 bg-[var(--bg-color)]/30 p-1.5 rounded-lg border border-[var(--border-color)] mt-1.5">
+                      <span className="text-[8px] font-bold text-[var(--text-color)]/40 uppercase tracking-wider block mr-1.5 self-center">Быстрые пресеты:</span>
+                      {[
+                        { name: '🏺 Керамика', url: 'https://images.unsplash.com/photo-1612196808214-b9e1d614e380?w=500&h=500&fit=crop' },
+                        { name: '👜 Кожа', url: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=500&h=500&fit=crop' },
+                        { name: '🌲 Вяз', url: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=500&h=500&fit=crop' },
+                        { name: '💍 Сусаль', url: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=500&h=500&fit=crop' },
+                        { name: '🧶 Холст', url: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&h=500&fit=crop' }
+                      ].map((preset, idx) => (
+                        <button
+                          type="button"
+                          key={idx}
+                          onClick={() => setImage(preset.url)}
+                          className="text-[9px] bg-[var(--card-bg)] border border-[var(--border-color)] rounded px-1.5 py-0.5 text-[var(--text-color)]/70 hover:bg-[var(--hover-bg)] transition-colors font-medium cursor-pointer"
+                        >
+                          {preset.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Elegant low-profile switches placed side-by-side inside form */}
+                  <div className="flex items-center justify-between border-t border-[var(--border-color)] pt-3 pb-1">
+                    <span className="text-[10px] font-bold text-[var(--text-color)]/50 uppercase tracking-widest">Метки карточки</span>
+                    <div className="flex gap-2.5">
+                      {/* New Status badge switch */}
+                      <button 
+                        type="button"
+                        onClick={() => setIsNew(!isNew)}
+                        className="flex items-center gap-1.5 bg-[var(--bg-color)]/40 border border-[var(--border-color)] px-2.5 py-1 rounded-xl cursor-pointer select-none hover:bg-[var(--hover-bg)] active:scale-95 transition-all text-xs font-semibold text-[var(--text-color)]/80"
+                      >
+                        <div className={`w-5 h-3 rounded-full p-0.5 transition-colors duration-200 ${isNew ? 'bg-amber-500' : 'bg-gray-300 dark:bg-zinc-700'}`}>
+                          <div 
+                            className={`w-2 h-2 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${isNew ? 'translate-x-2' : ''}`}
+                          />
+                        </div>
+                        <span className="text-[10px]">🆕 Новинка</span>
+                      </button>
+
+                      {/* Hit Status badge switch */}
+                      <button 
+                        type="button"
+                        onClick={() => setIsPopular(!isPopular)}
+                        className="flex items-center gap-1.5 bg-[var(--bg-color)]/40 border border-[var(--border-color)] px-2.5 py-1 rounded-xl cursor-pointer select-none hover:bg-[var(--hover-bg)] active:scale-95 transition-all text-xs font-semibold text-[var(--text-color)]/80"
+                      >
+                        <div className={`w-5 h-3 rounded-full p-0.5 transition-colors duration-200 ${isPopular ? 'bg-red-500' : 'bg-gray-300 dark:bg-zinc-700'}`}>
+                          <div 
+                            className={`w-2 h-2 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${isPopular ? 'translate-x-2' : ''}`}
+                          />
+                        </div>
+                        <span className="text-[10px]">🔥 ХИТ</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Layout Action Footer buttons */}
+                  <div className="pt-3.5 border-t border-[var(--border-color)] flex items-center justify-end gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] hover:bg-[var(--hover-bg)] font-semibold text-xs text-[var(--text-color)]/70 hover:text-[var(--text-color)] transition duration-200 cursor-pointer"
+                    >
+                      Отмена
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-5 py-2 rounded-xl bg-[var(--accent-color)] hover:bg-[var(--accent-hover)] font-bold text-xs text-white transition duration-200 cursor-pointer active:scale-95 shadow-md hover:shadow-indigo-500/10"
+                    >
+                      {editingProduct ? 'Сохранить изделие' : 'Опубликовать'}
+                    </button>
+                  </div>
+
+                </form>
 
               </div>
             </motion.div>

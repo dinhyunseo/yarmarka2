@@ -13,9 +13,9 @@ const loadProductsFromStorage = (): Product[] => {
   const dbVersion = localStorage.getItem('products_db_version');
   
   // If the stored version is missing or outdated, reset list to default PRODUCTS to pick up new changes
-  if (dbVersion !== 'v4') {
+  if (dbVersion !== 'v6') {
     localStorage.setItem('master_products', JSON.stringify(PRODUCTS));
-    localStorage.setItem('products_db_version', 'v4');
+    localStorage.setItem('products_db_version', 'v6');
     return PRODUCTS;
   }
 
@@ -25,7 +25,31 @@ const loadProductsFromStorage = (): Product[] => {
       // Reset local storage products if any of them contain obsolete custom categories
       const validCategories = ['jewelry', 'clothing', 'home', 'toys', 'ceramics', 'leather', 'blacksmith'];
       const hasObsoleteCategory = parsed.some(p => !validCategories.includes(p.category));
-      if (hasObsoleteCategory) {
+      
+      // Auto-sync: 
+      // 1. Check if any default product in code is missing or changed in storage
+      const needsSync1 = PRODUCTS.some(defaultProd => {
+        const storedProd = parsed.find(p => p.id === defaultProd.id);
+        if (!storedProd) return true;
+        return (
+          storedProd.image !== defaultProd.image || 
+          storedProd.title !== defaultProd.title ||
+          storedProd.description !== defaultProd.description ||
+          storedProd.category !== defaultProd.category ||
+          storedProd.price !== defaultProd.price
+        );
+      });
+
+      // 2. Check if a product in storage with a default ID (e.g., p.id <= 20) is NOT in code (meaning it was deleted from code)
+      const needsSync2 = parsed.some(storedProd => {
+        if (storedProd.id <= 20) {
+          const existsInCode = PRODUCTS.some(p => p.id === storedProd.id);
+          return !existsInCode;
+        }
+        return false;
+      });
+
+      if (hasObsoleteCategory || needsSync1 || needsSync2) {
         localStorage.setItem('master_products', JSON.stringify(PRODUCTS));
         return PRODUCTS;
       }

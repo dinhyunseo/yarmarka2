@@ -10,6 +10,15 @@ interface ProductsState {
 
 const loadProductsFromStorage = (): Product[] => {
   const stored = localStorage.getItem('master_products');
+  const dbVersion = localStorage.getItem('products_db_version');
+  
+  // If the stored version is missing or outdated, reset list to default PRODUCTS to pick up new changes
+  if (dbVersion !== 'v3') {
+    localStorage.setItem('master_products', JSON.stringify(PRODUCTS));
+    localStorage.setItem('products_db_version', 'v3');
+    return PRODUCTS;
+  }
+
   if (stored) {
     try {
       const parsed = JSON.parse(stored) as Product[];

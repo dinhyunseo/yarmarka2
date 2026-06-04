@@ -1,5 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import { Header } from '../../components/layout/Header/Header';
 import { ArrowLeft, Star, MapPin, Briefcase, Package, MessageSquare, Heart, Share2, CheckCircle, ExternalLink } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -21,7 +23,6 @@ const mastersData = {
     bio: 'Специализируюсь на создании долговечных аксессуаров из кожи растительного дубления. Каждое изделие прошивается вручную седельным швом, что гарантирует пожизненную прочность.',
     portfolio: [
       { id: 'p1', title: 'Кошелек "Классика"', price: 4500, image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=400&h=400&fit=crop' },
-      { id: 'p2', title: 'Ремень ручной работы', price: 3200, image: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=400&h=400&fit=crop' },
       { id: 'p3', title: 'Сумка "Охотник"', price: 12000, image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=400&fit=crop' },
       { id: 'p10', title: 'Органайзер для карт', price: 1800, image: 'https://images.unsplash.com/photo-1524333866104-e5557d93b161?w=400&h=400&fit=crop' },
     ]
@@ -38,7 +39,6 @@ const mastersData = {
     experience: '6 лет',
     bio: 'Моя керамика — это сочетание природных форм и современного минимализма. Использую только экологичные глазури и высокотемпературный обжиг для безопасности и прочности.',
     portfolio: [
-      { id: 'p4', title: 'Ваза "Океан"', price: 5800, image: 'https://images.unsplash.com/photo-1612196808214-b9e1d614e380?w=400&h=400&fit=crop' },
       { id: 'p5', title: 'Набор чашек "Лес"', price: 2400, image: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=400&h=400&fit=crop' },
       { id: 'p6', title: 'Панно "Мраморный берег"', price: 3500, image: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=400&h=400&fit=crop' },
       { id: 'p11', title: 'Чайник "Дракон"', price: 4200, image: 'https://images.unsplash.com/photo-158062831248c-aa7a76e1897c?w=400&h=400&fit=crop' },
@@ -73,6 +73,11 @@ export const MasterProfile: React.FC = () => {
   const [messageSent, setMessageSent] = React.useState(false);
 
   const master = mastersData[masterId as keyof typeof mastersData];
+  const allProducts = useSelector((state: RootState) => state.products.items);
+
+  const masterProducts = React.useMemo(() => {
+    return allProducts.filter(p => p.author === master?.name);
+  }, [allProducts, master?.name]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,11 +198,11 @@ export const MasterProfile: React.FC = () => {
         <section className={styles.portfolio}>
           <div className={styles.sectionHeader}>
             <h2>Работы мастера</h2>
-            <span className={styles.count}>{master.productsCount} изделий</span>
+            <span className={styles.count}>{masterProducts.length} изделий</span>
           </div>
           
           <div className={styles.grid}>
-            {master.portfolio.map(product => (
+            {masterProducts.map(product => (
               <motion.div 
                 key={product.id}
                 className={styles.productCard}

@@ -2,5 +2,5 @@
   "name": "Yarmarka Masters",
   "description": "A marketplace platform for masters and artisans.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

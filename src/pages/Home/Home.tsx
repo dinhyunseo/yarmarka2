@@ -34,10 +34,11 @@ export const Home: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const dispatch = useDispatch();
+  const products = useSelector((state: RootState) => state.products.items);
   const cartItems = useSelector<RootState, CartItem[]>((state) => state.cart.items);
 
   const filteredProducts = useMemo(() => {
-    let list = filterProducts(PRODUCTS, searchTerm, selectedCategory);
+    let list = filterProducts(products, searchTerm, selectedCategory);
     if (activeTab === 'new') {
       list = list.filter(p => p.isNew);
     } else if (activeTab === 'popular') {

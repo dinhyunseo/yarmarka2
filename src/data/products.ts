@@ -22,16 +22,6 @@ export const PRODUCTS: Product[] = [
     isNew: true
   },
   {
-    id: 3,
-    title: 'Декоративная ваза "Океан"',
-    price: 5800,
-    image: 'https://images.unsplash.com/photo-1612196808214-b9e1d614e380?w=400&h=400&fit=crop',
-    category: 'ceramics',
-    author: 'Елена Светлова',
-    description: 'Керамическая ваза ручной работы, покрытая матовой глазурью. Моя керамика — это сочетание природных форм и современного минимализма.',
-    isPopular: true
-  },
-  {
     id: 4,
     title: 'Кошелек "Классика"',
     price: 4500,
@@ -60,15 +50,6 @@ export const PRODUCTS: Product[] = [
     author: 'Елена Светлова',
     description: 'Использую только экологичные глазури и высокотемпературный обжиг для безопасности и прочности.',
     isNew: true
-  },
-  {
-    id: 7,
-    title: 'Ремень ручной работы',
-    price: 3200,
-    image: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=400&h=400&fit=crop',
-    category: 'leather',
-    author: 'Александр Громов',
-    description: 'Прочный кожаный ремень из итальянской кожи. Прослужит долгие годы, приобретая благородную патину.'
   },
   {
     id: 8,

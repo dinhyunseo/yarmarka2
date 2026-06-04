@@ -133,9 +133,9 @@
 }
 
 .sidebarButton:hover {
-  background: var(--hover-bg);
+  background: var(--accent-color);
   border-color: var(--accent-color);
-  color: var(--accent-color);
+  color: white;
 }
 
 .sidebarButton.active {

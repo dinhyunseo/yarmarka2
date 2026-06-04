@@ -13,12 +13,14 @@ const loadProductsFromStorage = (): Product[] => {
   if (stored) {
     try {
       const parsed = JSON.parse(stored) as Product[];
-      // Filter out deleted items if they are present in localStorage to keep it fresh
-      const filtered = parsed.filter(p => !['Декоративная ваза "Океан"', 'Ремень ручной работы'].includes(p.title));
-      if (filtered.length !== parsed.length) {
-        localStorage.setItem('master_products', JSON.stringify(filtered));
+      // Reset local storage products if any of them contain obsolete custom categories
+      const validCategories = ['jewelry', 'clothing', 'home', 'toys', 'art', 'ceramics', 'leather', 'blacksmith'];
+      const hasObsoleteCategory = parsed.some(p => !validCategories.includes(p.category));
+      if (hasObsoleteCategory) {
+        localStorage.setItem('master_products', JSON.stringify(PRODUCTS));
+        return PRODUCTS;
       }
-      return filtered;
+      return parsed;
     } catch (e) {
       console.error("Failed to parse stored products", e);
     }
